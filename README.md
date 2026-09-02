@@ -112,13 +112,15 @@ swap the PGlite driver back to `drizzle-orm/neon-http` in
 
 UI lives in `src/app` and `src/components`; it never touches the database.
 All database access is centralized in `src/lib/db/queries.ts`. Mutations are
-**Server Actions** in `src/lib/actions/` (no internal API routes — the only
-route handler besides the auth callback is the public `GET /r/[slug]`
-redirect). Every action validates input with **Zod** and returns an
-`{ data, error }` shape so raw DB/auth errors never reach the client. Auth is
-Neon Auth, isolated behind a small `AuthProvider` contract in `src/lib/auth/`
-so the concrete SDK touches exactly one file. Each route segment has
-`loading.tsx` (skeletons) and `error.tsx` boundaries.
+**Server Actions** in `src/lib/actions/` — there are no internal API routes
+for mutations. The only route handlers are the public `GET /r/[slug]`
+redirect and a stub `api/auth/[...path]` (returns 404 in local mode; the
+Neon Auth callback handler is wired in for the Neon path). Every action
+validates input with **Zod** and returns an `{ data, error }` shape so raw
+DB/auth errors never reach the client. Auth is isolated behind a small
+`AuthProvider` contract in `src/lib/auth/` so the concrete SDK touches
+exactly one file. Every route segment has a `loading.tsx` (skeletons) and
+an `error.tsx` boundary.
 
 ## Decisions I made
 

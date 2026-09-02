@@ -328,14 +328,15 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const [clientErrors, setClientErrors] = React.useState<FieldErrors>({});
 
   // Tracks which fields the user has edited since the last server response, so
-  // we can hide their error messages without round-tripping. Cleared whenever
-  // a new server response lands so the next submit re-surfaces server errors.
+  // we can hide their error messages without round-tripping. Reset whenever a
+  // new server response lands so the next submit re-surfaces server errors.
   const [clearedFields, setClearedFields] = React.useState<Set<string>>(
     () => new Set(),
   );
 
   // Reset the cleared-fields mask every time the server returns a fresh state.
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setClearedFields(new Set());
   }, [state]);
 

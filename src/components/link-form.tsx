@@ -185,12 +185,15 @@ export function LinkForm() {
     { data: null, error: "" },
   );
 
+  // Track which fields the user has edited since the last server response so
+  // stale field-level errors stop showing once the user starts typing. We
+  // reset the mask whenever a fresh server response arrives.
   const [clearedFields, setClearedFields] = React.useState<Set<string>>(
     () => new Set(),
   );
 
-  // Reset the cleared-fields mask every time the server returns a fresh state.
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setClearedFields(new Set());
   }, [state]);
 
