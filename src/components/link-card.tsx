@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { ArrowUpRight, Check, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
@@ -13,21 +12,7 @@ import type { LinkWithClicks } from "@/lib/db/queries";
 
 export function LinkCard({ link }: { link: LinkWithClicks }) {
   const [copied, setCopied] = useState(false);
-  const router = useRouter();
   const fullShortUrl = shortUrl(link.slug);
-
-  // Re-fetch the dashboard when the tab regains focus or the page becomes
-  // visible again, so click counts (and any other server-derived data) update
-  // without a manual reload after the user returns from /r/<slug>.
-  useEffect(() => {
-    const refresh = () => router.refresh();
-    window.addEventListener("focus", refresh);
-    document.addEventListener("visibilitychange", refresh);
-    return () => {
-      window.removeEventListener("focus", refresh);
-      document.removeEventListener("visibilitychange", refresh);
-    };
-  }, [router]);
 
   const copy = async () => {
     try {
@@ -54,7 +39,7 @@ export function LinkCard({ link }: { link: LinkWithClicks }) {
             <p className="truncate text-sm text-foreground">{link.title}</p>
           ) : null }
           <a
-            href={link.destinationUrl}
+            href={`/r/${link.slug}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1 truncate text-xs text-muted-foreground hover:underline"

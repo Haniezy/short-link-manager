@@ -1,16 +1,31 @@
 import { notFound } from "next/navigation";
 import { revalidateTag } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
 import { getLinkBySlug, recordClick } from "@/lib/db/queries";
+
+// Cache tags are declared here so the redirect route and the actions agree on
+// the same keys. `link:<id>` covers the per-link detail query
+// (getLinkById/getClicksPerDay), `links` covers the user-wide dashboard list
+// (getLinksByUser). Invalidate both after a click so either page reflects the
+// new count when the user navigates back.
+const LINKS_TAG = "links";
+const linkTag = (id: string) => `link:${id}`;
 
 /**
  * Public redirect endpoint. Anyone can hit /r/[slug]; it is not authenticated.
  * On a hit we record a click, invalidate the cached link/dashboard data so the
- * UI updates without a manual reload, then issue a 307 (temporary) redirect.
+ * UI updates without a manual reload, then issue a 303 redirect.
  *
- * We also emit `Cache-Control: no-store` so browsers don't serve the redirect
- * from their HTTP cache without re-hitting this route (which would skip the
- * recordClick insert and make the click counter never advance).
+ * 303 (See Other) is deliberate: browsers are explicitly allowed to cache 307
+ * responses, which would replay the redirect from disk without re-running this
+ * handler — silently skipping recordClick and freezing the click counter. 303
+ * plus a `no-store` Cache-Control makes the browser re-hit this route every
+ * time, so every visit is counted exactly once.
+ *
+ * Cache invalidation runs in `after()` so the redirect can flush to the wire
+ * before we do extra cache work; the user's browser is already on the way to
+ * the destination by the time revalidateTag runs.
  */
 export async function GET(
   _request: NextRequest,
@@ -24,10 +39,13 @@ export async function GET(
   }
 
   await recordClick(link.id);
-  revalidateTag(`link:${link.id}`, "max");
-  revalidateTag("links", "max");
 
-  const response = NextResponse.redirect(link.destinationUrl, 307);
+  after(() => {
+    revalidateTag(`link:${link.id}`, "max");
+    revalidateTag("links", "max");
+  });
+
+  const response = NextResponse.redirect(link.destinationUrl, 303);
   response.headers.set("Cache-Control", "no-store, max-age=0");
   return response;
 }
