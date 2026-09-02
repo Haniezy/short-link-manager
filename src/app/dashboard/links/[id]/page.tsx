@@ -8,6 +8,9 @@ import { ClicksChart } from "@/components/clicks-chart";
 import { DeleteLinkButton } from "@/components/delete-link-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function LinkDetailPage({
   params,
 }: {
@@ -62,7 +65,7 @@ export default async function LinkDetailPage({
           </CardHeader>
           <CardContent>
             <a
-              href={link.destinationUrl}
+              href={`/r/${link.slug}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1 break-all text-sm hover:underline"

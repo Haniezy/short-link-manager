@@ -42,6 +42,8 @@ yarn-error.log*
 # local-only tooling artifacts — keep files on disk, never commit
 /.zcode
 /.extract_landing.py
+# temporary debug endpoints — delete before shipping
+/src/app/api/debug/
 
 # vercel
 .vercel
