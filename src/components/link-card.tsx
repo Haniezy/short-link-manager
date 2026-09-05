@@ -37,7 +37,7 @@ export function LinkCard({ link }: { link: LinkWithClicks }) {
           </Link>
           {link.title ? (
             <p className="truncate text-sm text-foreground">{link.title}</p>
-          ) : null }
+          ) : null}
           <a
             href={`/r/${link.slug}`}
             target="_blank"
@@ -51,19 +51,37 @@ export function LinkCard({ link }: { link: LinkWithClicks }) {
         <ConfirmDelete linkId={link.id} slug={link.slug} />
       </div>
 
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="text-xs text-muted-foreground">
-          <span className="font-semibold text-foreground">{link.clickCount}</span>{" "}
+          <span className="font-semibold text-foreground">
+            {link.clickCount}
+          </span>{" "}
           {link.clickCount === 1 ? "click" : "clicks"}
+          <span className="mx-1.5">·</span>
+          <span>
+            {new Date(link.createdAt).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+              timeZone: "UTC",
+            })}
+          </span>
         </div>
         <div className="flex gap-1">
-          <Button variant="outline" size="sm" onClick={copy} aria-label="Copy short link">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={copy}
+            aria-label="Copy short link"
+          >
             {copied ? (
               <Check className="h-4 w-4" />
             ) : (
               <Copy className="h-4 w-4" />
             )}
-            <span className="hidden sm:inline">{copied ? "Copied" : "Copy"}</span>
+            <span className="hidden sm:inline">
+              {copied ? "Copied" : "Copy"}
+            </span>
           </Button>
           <Button
             variant="outline"
