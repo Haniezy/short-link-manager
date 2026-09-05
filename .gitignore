@@ -1,6 +1,4 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
+# Dependencies
 /node_modules
 /.pnp
 .pnp.*
@@ -10,47 +8,46 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
+# Testing
 /coverage
 
-# next.js
+# Next.js
 /.next/
 /out/
 
-# production
+# Production
 /build
 
-# misc
+# Miscellaneous
 .DS_Store
 *.pem
 
-# debug
+# Debug logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files — commit .env.example, never real secrets
+# Environment files
+# Commit .env.example, but never commit real secrets.
 .env
 .env.local
 .env.*.local
 !.env.example
 
-# local PGlite database directory (created at runtime, never commit data)
+# Local PGlite database
 /.pglocal
 
-# generated Drizzle migration SQL (regenerate per environment; never commit)
-/drizzle
-
-# local-only tooling artifacts — keep files on disk, never commit
+# Local tooling files
 /.zcode
 /.extract_landing.py
-# temporary debug endpoints — delete before shipping
+
+# Temporary debug routes
 /src/app/api/debug/
 
-# vercel
+# Vercel
 .vercel
 
-# typescript
+# TypeScript
 *.tsbuildinfo
 next-env.d.ts
