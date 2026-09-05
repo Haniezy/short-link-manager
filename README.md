@@ -9,7 +9,7 @@ next-themes · sonner · recharts**. Package manager: **pnpm**.
 
 ## Deployed URL
 
-> **TODO:** _Add your deployed URL here after deploying to Vercel._
+> **https://short-link-manager-rose.vercel.app/**
 
 ## Local setup
 
