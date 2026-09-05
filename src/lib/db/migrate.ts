@@ -1,4 +1,5 @@
-import { getClient } from "./client";
+import { getClient, isNeonMode } from "./client";
+import { PGlite } from "@electric-sql/pglite";
 
 /**
  * Idempotent schema bootstrap for the local PGlite database. Runs
@@ -42,18 +43,30 @@ declare global {
 }
 
 export function ensureSchema(): Promise<void> {
-  if (!globalThis.__shortlinkMigrated) {
-    // PGlite/Postgres reject multiple statements in one prepared query, so run
-    // each DDL statement separately. Split on semicolons, drop empties.
-    const statements = SCHEMA_SQL.split(";")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    globalThis.__shortlinkMigrated = (async () => {
-      const client = await getClient();
-      for (const statement of statements) {
-        await client.query(statement);
-      }
-    })();
+  if (globalThis.__shortlinkMigrated) {
+    return globalThis.__shortlinkMigrated;
   }
+
+  // Neon mode: the schema lives in the Neon project and is managed with
+  // `drizzle-kit push`. There's no local database to bootstrap — and the
+  // Neon HTTP client is a fetch wrapper with no `.query()`, so attempting
+  // the PGlite bootstrap below would crash at runtime.
+  if (isNeonMode()) {
+    globalThis.__shortlinkMigrated = Promise.resolve();
+    return globalThis.__shortlinkMigrated;
+  }
+
+  // PGlite/Postgres reject multiple statements in one prepared query, so run
+  // each DDL statement separately. Split on semicolons, drop empties.
+  const statements = SCHEMA_SQL.split(";")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  globalThis.__shortlinkMigrated = (async () => {
+    const client = await getClient();
+    const sqlClient = client as unknown as PGlite;
+    for (const statement of statements) {
+      await sqlClient.query(statement);
+    }
+  })();
   return globalThis.__shortlinkMigrated;
 }

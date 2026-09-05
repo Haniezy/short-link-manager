@@ -1,20 +1,37 @@
 import { NextResponse } from "next/server";
+import { neonAuthHandlers } from "@/lib/auth/neon-auth";
 
 /**
- * Auth endpoint stub for the local (no Neon) build.
+ * Auth endpoint.
  *
- * With Neon Auth, this file exposed the Neon Auth callback handler. The local
- * provider stores sessions in a signed httpOnly cookie and performs sign-up /
- * sign-in / sign-out through Server Actions (see src/lib/actions/auth.ts), so
- * this route is no longer needed. It returns 404 to avoid leaking a dead
- * endpoint.
+ * With Neon Auth this mounts the official Neon Auth API handler, which proxies
+ * auth requests (sign-in flows, session refresh, etc.) to the Neon Auth
+ * instance and maintains the session cookie. When Neon Auth is not configured
+ * (local mode), the local provider performs sign-up / sign-in / sign-out
+ * entirely through Server Actions (see src/lib/actions/auth.ts), so this route
+ * returns 404 to avoid leaking a dead endpoint.
  */
-export const dynamic = "force-static";
 
-export function GET() {
-  return NextResponse.json({ error: "Not found" }, { status: 404 });
+const NEON_CONFIGURED = Boolean(
+  process.env.NEON_AUTH_BASE_URL && process.env.NEON_AUTH_COOKIE_SECRET,
+);
+
+type Ctx = { params: Promise<{ path: string[] }> };
+
+export function GET(request: Request, ctx: Ctx): Promise<Response> {
+  if (!NEON_CONFIGURED) {
+    return Promise.resolve(
+      NextResponse.json({ error: "Not found" }, { status: 404 }),
+    );
+  }
+  return neonAuthHandlers().GET(request, ctx);
 }
 
-export function POST() {
-  return NextResponse.json({ error: "Not found" }, { status: 404 });
+export function POST(request: Request, ctx: Ctx): Promise<Response> {
+  if (!NEON_CONFIGURED) {
+    return Promise.resolve(
+      NextResponse.json({ error: "Not found" }, { status: 404 }),
+    );
+  }
+  return neonAuthHandlers().POST(request, ctx);
 }

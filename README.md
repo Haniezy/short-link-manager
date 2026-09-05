@@ -25,7 +25,11 @@ next-themes · sonner · recharts**. Package manager: **pnpm**.
 pnpm install
 ```
 
-### 3. Create a Neon project
+### 3. Create a Neon project (Neon mode only)
+
+Neon is required **only** if you want the hosted Postgres + Neon Auth path. To
+skip it entirely and run fully offline, omit these vars from `.env.local` and
+the app auto-falls-back to PGlite + local email/password auth.
 
 1. Create a project in the [Neon console](https://console.neon.tech).
 2. Copy the **connection string** (`postgresql://…`) from the dashboard.
@@ -38,7 +42,8 @@ pnpm install
 cp .env.example .env.local
 ```
 
-Fill in `.env.local`:
+**Neon mode** — set `DATABASE_URL`, `NEON_AUTH_BASE_URL`, and
+`NEON_AUTH_COOKIE_SECRET`:
 
 | Variable                   | What it is                                             |
 | -------------------------- | ------------------------------------------------------ |
@@ -47,11 +52,25 @@ Fill in `.env.local`:
 | `NEON_AUTH_BASE_URL`       | Base URL of your Neon Auth instance                    |
 | `NEON_AUTH_COOKIE_SECRET`  | Random 32+ char secret for signing session cookies (`openssl rand -hex 32`) |
 
-### 5. Run migrations
+**Local (offline) mode** — just set these and leave `DATABASE_URL` empty:
 
-```bash
-pnpm exec drizzle-kit push   # creates the `links` and `clicks` tables
-```
+| Variable                   | What it is                                             |
+| -------------------------- | ------------------------------------------------------ |
+| `NEXT_PUBLIC_BASE_URL`     | `http://localhost:3000`                                |
+| `LOCAL_AUTH_SECRET`        | Random 32+ char secret (`openssl rand -hex 32`)        |
+| `PGLOCAL_DIR`              | `".pglocal"` (where PGlite stores data)                |
+
+### 5. Create the tables
+
+- **Neon mode**: generate the schema SQL, then paste it into the Neon SQL
+  editor (Neon supports standard `psql`):
+
+  ```bash
+  pnpm exec drizzle-kit generate   # writes ./drizzle/0000_*.sql
+  ```
+
+- **Local mode**: nothing to do — PGlite bootstraps its schema automatically on
+  first run.
 
 ### 6. Run
 
@@ -71,23 +90,24 @@ visit `/r/<slug>` → watch the click count go up.
 | `pnpm start`              | Serve the production build            |
 | `pnpm lint`               | ESLint                                |
 | `pnpm exec tsc --noEmit`  | Type-check (strict)                   |
-| `pnpm exec drizzle-kit push` | Push the Drizzle schema to Neon    |
+| `pnpm exec drizzle-kit generate` | Generate schema SQL (apply in Neon SQL editor) |
 
-## Local (no Neon) mode
+## Auto-selected backends (Neon or fully local)
 
-If you don't want to set up a Neon account, the app runs **fully offline** by
-swapping two files. Both code paths are kept in the repo so flipping back is a
-one-line change.
+The app switches between Neon and a fully-offline local stack **automatically**
+based on which environment variables are present — no code changes or file
+swaps needed:
 
-- The DB driver is replaced with **PGlite** (in-process Postgres over WASM), so
-  data persists in a local folder (`.pglocal/`) instead of the cloud. The schema
-  is created on first boot by `src/lib/db/migrate.ts` — no `drizzle-kit push`
-  step is required.
-- Auth is replaced with a **local email/password** provider (`bcryptjs` +
-  signed httpOnly cookie). Sessions are stored in the cookie itself; no external
-  service is contacted.
+- **Neon mode** (production / anything with `DATABASE_URL` set) uses Neon
+  Postgres via the HTTP driver and Neon Auth.
+- **Local mode** (no `DATABASE_URL`) runs **fully offline**: the DB driver is
+  **PGlite** (real Postgres in-process over WASM), with data persisted to a
+  local folder (`.pglocal/`). The schema is created on first boot by
+  `src/lib/db/migrate.ts` — no migration command required.
+  Auth is the **local email/password** provider (`bcryptjs` + a signed
+  httpOnly cookie); sessions live in the cookie, nothing external is contacted.
 
-`.env.local` only needs:
+Local `.env.local` only needs:
 
 ```
 NEXT_PUBLIC_BASE_URL="http://localhost:3000"
@@ -95,10 +115,9 @@ LOCAL_AUTH_SECRET="<generated via openssl rand -hex 32>"
 PGLOCAL_DIR=".pglocal"
 ```
 
-To re-enable Neon Auth: restore `DATABASE_URL`, `NEON_AUTH_BASE_URL`, and
-`NEON_AUTH_COOKIE_SECRET`, point `src/lib/auth/index.ts` at `./neon-auth`, and
-swap the PGlite driver back to `drizzle-orm/neon-http` in
-`src/lib/db/client.ts`. The Neon code path is kept untouched for this purpose.
+Set `DATABASE_URL` (along with `NEON_AUTH_BASE_URL` and
+`NEON_AUTH_COOKIE_SECRET`) on Vercel or any Neon-connectable environment to
+opt back into Neon automatically.
 
 ## Deploying to Vercel
 
@@ -114,13 +133,12 @@ UI lives in `src/app` and `src/components`; it never touches the database.
 All database access is centralized in `src/lib/db/queries.ts`. Mutations are
 **Server Actions** in `src/lib/actions/` — there are no internal API routes
 for mutations. The only route handlers are the public `GET /r/[slug]`
-redirect and a stub `api/auth/[...path]` (returns 404 in local mode; the
-Neon Auth callback handler is wired in for the Neon path). Every action
-validates input with **Zod** and returns an `{ data, error }` shape so raw
-DB/auth errors never reach the client. Auth is isolated behind a small
-`AuthProvider` contract in `src/lib/auth/` so the concrete SDK touches
-exactly one file. Every route segment has a `loading.tsx` (skeletons) and
-an `error.tsx` boundary.
+redirect and `api/auth/[...path]` (mounts the Neon Auth handler when configured,
+returns 404 in local mode). Every action validates input with **Zod** and
+returns an `{ data, error }` shape so raw DB/auth errors never reach the
+client. Auth is isolated behind a small `AuthProvider` contract in
+`src/lib/auth/` so the concrete SDK touches exactly one file. Every route
+segment has a `loading.tsx` (skeletons) and an `error.tsx` boundary.
 
 ## Decisions I made
 

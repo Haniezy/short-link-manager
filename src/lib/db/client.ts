@@ -1,60 +1,64 @@
+import { drizzle as neonDrizzle } from "drizzle-orm/neon-http";
+import { neon } from "@neondatabase/serverless";
+import { drizzle as pgliteDrizzle } from "drizzle-orm/pglite";
 import { PGlite } from "@electric-sql/pglite";
-import { drizzle, type PgliteDatabase } from "drizzle-orm/pglite";
 import * as schema from "./schema";
-import { resolve } from "node:path";
 
-/**
- * Local Postgres via PGlite (Postgres-in-process, WASM). This replaces the
- * Neon HTTP driver so the app runs entirely offline with no Neon account.
- * Data is persisted to the directory in PGLOCAL_DIR (defaults to ".pglocal").
- *
- * Initialization is lazy and stored on `globalThis` so Turbopack HMR / Next.js
- * module-graph splits don't spawn a second PGlite on the same data dir
- * (PGlite does not support multiple connections; a second instance would
- * miss writes from the first). `PGlite.create()` awaits WASM + FS ready.
- */
+export type AppDb =
+  | ReturnType<typeof neonDrizzle>
+  | ReturnType<typeof pgliteDrizzle>;
 
-type Schema = typeof schema;
-export type AppDb = PgliteDatabase<Schema>;
+/** True when DATABASE_URL is set, i.e. the app is wired to Neon Postgres. */
+export function isNeonMode(): boolean {
+  return Boolean(process.env.DATABASE_URL);
+}
 
 type DbHandle = {
-  client: PGlite;
+  client: ReturnType<typeof neon> | PGlite;
   db: AppDb;
 };
 
 declare global {
-  var __shortlinkPgPromise: Promise<DbHandle> | undefined;
+  var __shortlinkDbPromise: Promise<DbHandle> | undefined;
 }
 
-function init(): Promise<DbHandle> {
-  // If a previous attempt rejected (e.g. a stale lock file from a crashed
-  // process), drop the cached promise so the next caller gets a fresh attempt.
-  // We only cache successfully-resolved handles.
-  const cached = globalThis.__shortlinkPgPromise;
+async function init(): Promise<DbHandle> {
+  const cached = globalThis.__shortlinkDbPromise;
   if (cached) {
     return cached;
   }
   const pending = (async () => {
-    const dataDir = resolve(
-      /* turbopackIgnore: true */ process.cwd(),
-      process.env.PGLOCAL_DIR || ".pglocal",
-    );
+    if (isNeonMode()) {
+      const client = neon(process.env.DATABASE_URL!);
+      const db = neonDrizzle(client, { schema });
+      return { client: client as ReturnType<typeof neon>, db: db as AppDb };
+    }
+    const dataDir =
+      typeof process !== "undefined" &&
+      typeof process.cwd === "function"
+        ? `${process.cwd()}/${process.env.PGLOCAL_DIR ?? ".pglocal"}`
+        : `.pglocal`;
     const client = await PGlite.create(dataDir);
-    const db = drizzle(client, { schema });
-    globalThis.__shortlinkPgPromise = Promise.resolve({ client, db });
-    return { client, db };
+    const db = pgliteDrizzle(client, { schema });
+    return { client, db: db as AppDb };
   })();
-  // Cache only after success — rejections should not poison future calls.
-  globalThis.__shortlinkPgPromise = pending;
+  // Cache the in-flight handle so concurrent requests share one PGlite
+  // instance (PGlite allows a single connection per data dir). On failure we
+  // drop the cache so a transient error (e.g. a stale lock from a crashed
+  // process) doesn't poison every later request in this process.
+  globalThis.__shortlinkDbPromise = pending;
+  pending.catch(() => {
+    globalThis.__shortlinkDbPromise = undefined;
+  });
   return pending;
 }
 
-export async function getClient(): Promise<PGlite> {
+export async function getClient() {
   const { client } = await init();
   return client;
 }
 
-export async function getDb(): Promise<AppDb> {
+export async function getDb() {
   const { db } = await init();
   return db;
 }

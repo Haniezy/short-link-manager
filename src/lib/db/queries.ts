@@ -1,7 +1,9 @@
-import { and, count, desc, eq, gte, sql } from "drizzle-orm";
+import { and, count, desc, eq, gte, sql, type InferSelectModel } from "drizzle-orm";
 import { getDb } from "./client";
 import { ensureSchema } from "./migrate";
 import { clicks, links, users, type Link } from "./schema";
+
+type LinkRow = InferSelectModel<typeof links>;
 
 export type LinkWithClicks = Link & { clickCount: number };
 
@@ -29,7 +31,7 @@ export async function getLinksByUser(userId: string): Promise<LinkWithClicks[]> 
     .groupBy(links.id)
     .orderBy(desc(links.createdAt));
 
-  return rows.map((row) => ({ ...row.link, clickCount: Number(row.clickCount) }));
+  return rows.map((row: { link: LinkRow; clickCount: string | number }) => ({ ...row.link, clickCount: Number(row.clickCount) }));
 }
 
 export async function getLinkById(
@@ -90,8 +92,8 @@ export async function deleteLinkById(id: string, userId: string): Promise<boolea
   const deleted = await database
     .delete(links)
     .where(and(eq(links.id, id), eq(links.userId, userId)))
-    .returning({ id: links.id });
-  return deleted.length > 0;
+    .returning();
+  return (deleted as unknown as Array<Record<string, unknown>>).length > 0;
 }
 
 export async function recordClick(linkId: string): Promise<void> {
@@ -124,7 +126,7 @@ export async function getClicksPerDay(
     .where(and(eq(clicks.linkId, linkId), gte(clicks.clickedAt, since)))
     .groupBy(sql`to_char(${clicks.clickedAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD')`);
 
-  const byDay = new Map(rows.map((r) => [r.day, Number(r.clicks)]));
+  const byDay = new Map(rows.map((r: { day: string; clicks: string | number }) => [r.day, Number(r.clicks)]));
   const series: DailyClicks[] = [];
   for (let i = 0; i < days; i += 1) {
     const d = new Date(since);

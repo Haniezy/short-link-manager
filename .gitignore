@@ -39,6 +39,9 @@ yarn-error.log*
 # local PGlite database directory (created at runtime, never commit data)
 /.pglocal
 
+# generated Drizzle migration SQL (regenerate per environment; never commit)
+/drizzle
+
 # local-only tooling artifacts — keep files on disk, never commit
 /.zcode
 /.extract_landing.py
