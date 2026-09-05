@@ -13,12 +13,13 @@ import { getLinkBySlug, recordClick } from "@/lib/db/queries";
 /**
  * Public redirect endpoint. Anyone can hit /r/[slug]; it is not authenticated.
  * On a hit we record a click, invalidate the cached link/dashboard data so the
- * UI updates without a manual reload, then issue a 307 redirect to the
- * destination.
+ * UI updates without a manual reload, then issue a 303 redirect.
  *
- * We set `Cache-Control: no-store` so the browser always re-hits this route:
- * without it, an intermediary could replay a cached redirect response and
- * silently skip recordClick, freezing the click counter.
+ * 303 (See Other) is deliberate: browsers are explicitly allowed to cache 307
+ * responses, which would replay the redirect from disk without re-running this
+ * handler — silently skipping recordClick and freezing the click counter. 303
+ * plus a `no-store` Cache-Control makes the browser re-hit this route every
+ * time, so every visit is counted exactly once.
  *
  * Cache invalidation runs in `after()` so the redirect can flush to the wire
  * before we do extra cache work; the user's browser is already on the way to
@@ -42,7 +43,7 @@ export async function GET(
     revalidateTag("links", "max");
   });
 
-  const response = NextResponse.redirect(link.destinationUrl, 307);
+  const response = NextResponse.redirect(link.destinationUrl, 303);
   response.headers.set("Cache-Control", "no-store, max-age=0");
   return response;
 }
