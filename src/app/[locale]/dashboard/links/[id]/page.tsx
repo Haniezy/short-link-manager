@@ -5,6 +5,7 @@ import { requireSession } from "@/lib/auth/guard";
 import { getClicksPerDay, getLinkById } from "@/lib/db/queries";
 import { shortUrl } from "@/lib/config";
 import { ClicksChart } from "@/components/clicks-chart";
+import { CopyLinkButton } from "@/components/copy-link-button";
 import { DeleteLinkButton } from "@/components/delete-link-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTranslations } from "next-intl/server";
@@ -40,14 +41,17 @@ export default async function LinkDetailPage({
         {t("back")}
       </Link>
 
-      <div className="flex items-start justify-between gap-3">
-        <div className="space-y-1">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 space-y-1 break-words">
           <h1 className="font-mono text-xl font-bold">/r/{link.slug}</h1>
           {link.title ? (
             <p className="text-muted-foreground">{link.title}</p>
           ) : null}
         </div>
-        <DeleteLinkButton linkId={link.id} slug={link.slug} />
+        <div className="flex shrink-0 items-center gap-2">
+          <CopyLinkButton slug={link.slug} />
+          <DeleteLinkButton linkId={link.id} slug={link.slug} />
+        </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">

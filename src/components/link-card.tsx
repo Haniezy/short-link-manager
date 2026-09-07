@@ -1,32 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowUpRight, Check, Copy } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
-import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ConfirmDelete } from "@/components/confirm-delete";
-import { shortUrl } from "@/lib/config";
+import { CopyLinkButton } from "@/components/copy-link-button";
 import type { LinkWithClicks } from "@/lib/db/queries";
 import { useTranslations, useLocale } from "next-intl";
 
 export function LinkCard({ link }: { link: LinkWithClicks }) {
-  const [copied, setCopied] = useState(false);
-  const fullShortUrl = shortUrl(link.slug);
   const t = useTranslations("linkCard");
   const locale = useLocale();
-
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(fullShortUrl);
-      setCopied(true);
-      toast.success(t("copySuccess"));
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      toast.error(t("copyFailed"));
-    }
-  };
 
   return (
     <Card className="flex flex-col gap-3 p-4 shadow-[0_2px_6px_-2px_oklch(0.575_0.205_294/0.18),0_12px_32px_-12px_oklch(0.575_0.205_294/0.25)] ring-1 ring-primary/15 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_-4px_oklch(0.575_0.205_294/0.28),0_20px_40px_-12px_oklch(0.575_0.205_294/0.35)]">
@@ -71,21 +56,7 @@ export function LinkCard({ link }: { link: LinkWithClicks }) {
           </span>
         </div>
         <div className="flex gap-1">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={copy}
-            aria-label={t("copy")}
-          >
-            {copied ? (
-              <Check className="h-4 w-4" />
-            ) : (
-              <Copy className="h-4 w-4" />
-            )}
-            <span className="hidden sm:inline">
-              {copied ? t("copied") : t("copy")}
-            </span>
-          </Button>
+          <CopyLinkButton slug={link.slug} compact />
           <Button
             variant="outline"
             size="sm"
