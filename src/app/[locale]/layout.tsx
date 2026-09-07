@@ -62,7 +62,7 @@ export default async function LocaleLayout({
               disableTransitionOnChange
             >
               <Navbar />
-              <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
+              <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 has-[.auth-shell]:py-0">
                 {children}
               </main>
               <Toaster richColors position="top-center" />
