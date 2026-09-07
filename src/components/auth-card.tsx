@@ -1,13 +1,6 @@
 import { Forward } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { AuthForm } from "@/components/auth-form";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { getTranslations } from "next-intl/server";
 
 /**
@@ -18,8 +11,8 @@ export async function AuthCard({ mode }: { mode: "login" | "signup" }) {
   const t = await getTranslations("auth");
   const isSignup = mode === "signup";
   return (
-    <Card className="card-glow border-primary/20 bg-card/80 backdrop-blur-xl">
-      <CardHeader className="items-center text-center sm:items-start sm:text-left">
+    <div className="rounded-2xl bg-card/60 p-6 backdrop-blur-xl sm:p-8">
+      <div className="mb-6 flex flex-col items-center text-center sm:items-start sm:text-left">
         <Link
           href="/"
           className="mb-3 inline-flex items-center gap-2 text-sm font-semibold tracking-tight"
@@ -29,16 +22,14 @@ export async function AuthCard({ mode }: { mode: "login" | "signup" }) {
           </span>
           <span>ShortLink</span>
         </Link>
-        <CardTitle className="text-2xl">
+        <h1 className="text-2xl font-semibold">
           {isSignup ? t("signup") : t("login")}
-        </CardTitle>
-        <CardDescription>
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           {isSignup ? t("signupDesc") : t("loginDesc")}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <AuthForm mode={mode} />
-      </CardContent>
-    </Card>
+        </p>
+      </div>
+      <AuthForm mode={mode} />
+    </div>
   );
 }
