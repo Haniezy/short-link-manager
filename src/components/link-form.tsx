@@ -87,6 +87,7 @@ function FieldInput({
   pattern,
   maxLength,
   error,
+  value,
   onValueChange,
 }: {
   id: string;
@@ -99,7 +100,8 @@ function FieldInput({
   pattern?: string;
   maxLength?: number;
   error?: string;
-  onValueChange?: () => void;
+  value: string;
+  onValueChange: (value: string) => void;
 }) {
   return (
     <div className="space-y-0">
@@ -135,6 +137,7 @@ function FieldInput({
             id={id}
             name={name}
             type={type}
+            value={value}
             required={required}
             pattern={pattern}
             maxLength={maxLength}
@@ -150,12 +153,12 @@ function FieldInput({
                 .closest(".group\\/field")
                 ?.removeAttribute("data-focused");
             }}
-            onInput={(e) => {
+            onChange={(e) => {
               const v = (e.target as HTMLInputElement).value;
               e.currentTarget
                 .closest(".group\\/field")
                 ?.toggleAttribute("data-has-value", v.length > 0);
-              onValueChange?.();
+              onValueChange(v);
             }}
             placeholder={label}
             className="h-10 w-full border-0 bg-transparent px-1 text-sm shadow-none ring-0 outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -173,6 +176,14 @@ function FieldInput({
 export function LinkForm() {
   const router = useRouter();
   const t = useTranslations("linkForm");
+  // React resets uncontrolled inputs after a form action resolves, including
+  // validation failures returned as data. Keep the draft controlled so an
+  // unsuccessful submission never clears the user's input.
+  const [draft, setDraft] = React.useState({
+    destinationUrl: "",
+    slug: "",
+    title: "",
+  });
   const [state, formAction] = useActionState<
     ActionResult<LinkWithClicks>,
     FormData
@@ -231,7 +242,8 @@ export function LinkForm() {
       ? state.error
       : undefined;
 
-  const handleEdit = (name: string) => {
+  const handleEdit = (name: keyof typeof draft, value: string) => {
+    setDraft((prev) => ({ ...prev, [name]: value }));
     setClearedFields((prev) => {
       if (prev.has(name)) return prev;
       const next = new Set(prev);
@@ -267,7 +279,8 @@ export function LinkForm() {
           icon={Link2}
           required
           error={visibleFieldError("destinationUrl")}
-          onValueChange={() => handleEdit("destinationUrl")}
+          value={draft.destinationUrl}
+          onValueChange={(value) => handleEdit("destinationUrl", value)}
         />
       </div>
 
@@ -285,7 +298,8 @@ export function LinkForm() {
           prefix="/r/"
           pattern="[a-zA-Z0-9-]+"
           error={visibleFieldError("slug")}
-          onValueChange={() => handleEdit("slug")}
+          value={draft.slug}
+          onValueChange={(value) => handleEdit("slug", value)}
         />
         <p className="text-xs text-muted-foreground">
           {t("slugHint")}
@@ -305,7 +319,8 @@ export function LinkForm() {
           icon={Type}
           maxLength={120}
           error={visibleFieldError("title")}
-          onValueChange={() => handleEdit("title")}
+          value={draft.title}
+          onValueChange={(value) => handleEdit("title", value)}
         />
       </div>
 
