@@ -1,12 +1,13 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 import { requireSession } from "@/lib/auth/guard";
 import { getClicksPerDay, getLinkById } from "@/lib/db/queries";
 import { shortUrl } from "@/lib/config";
 import { ClicksChart } from "@/components/clicks-chart";
 import { DeleteLinkButton } from "@/components/delete-link-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -14,12 +15,13 @@ export const revalidate = 0;
 export default async function LinkDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ locale: string; id: string }>;
 }) {
-  const { id } = await params;
+  const { id, locale } = await params;
   const session = await requireSession();
   const link = await getLinkById(id, session.user.id);
   if (!link) notFound();
+  const t = await getTranslations({ locale, namespace: "linkDetail" });
 
   const daily = await getClicksPerDay(link.id, 7);
   const created = new Date(link.createdAt).toLocaleDateString(undefined, {
@@ -35,7 +37,7 @@ export default async function LinkDetailPage({
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
-        Back to links
+        {t("back")}
       </Link>
 
       <div className="flex items-start justify-between gap-3">
@@ -52,7 +54,7 @@ export default async function LinkDetailPage({
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total clicks
+              {t("visits")}
             </CardTitle>
           </CardHeader>
           <CardContent className="text-3xl font-bold">{link.clickCount}</CardContent>
@@ -60,7 +62,7 @@ export default async function LinkDetailPage({
         <Card className="sm:col-span-2">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Destination
+              {t("destination")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -74,8 +76,10 @@ export default async function LinkDetailPage({
               <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-primary/70" />
             </a>
             <p className="mt-2 text-xs text-muted-foreground">
-              Created {created} · Short URL:{" "}
-              <span className="font-mono">{shortUrl(link.slug)}</span>
+              {t("created", {
+                date: created,
+                shortUrl: shortUrl(link.slug),
+              })}
             </p>
           </CardContent>
         </Card>
@@ -83,7 +87,7 @@ export default async function LinkDetailPage({
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Clicks per day (last 7 days)</CardTitle>
+          <CardTitle className="text-base">{t("clicksPerDay")}</CardTitle>
         </CardHeader>
         <CardContent>
           <ClicksChart data={daily} />

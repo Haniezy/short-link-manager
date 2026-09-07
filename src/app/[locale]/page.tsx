@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
+import { Link, redirect } from "@/i18n/navigation";
 import {
   Activity,
   ArrowRight,
@@ -15,10 +14,12 @@ import { auth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { DashboardMockup } from "@/components/landing/dashboard-mockup";
 import { FeatureCard } from "@/components/landing/feature-card";
+import { getLocale, getTranslations } from "next-intl/server";
 
 export default async function Home() {
   const session = await auth.getSession();
-  if (session) redirect("/dashboard");
+  if (session) redirect({ href: "/dashboard", locale: await getLocale() });
+  const t = await getTranslations("home");
 
   return (
     <div className="landing-wrap relative isolate overflow-x-clip">
@@ -38,40 +39,38 @@ export default async function Home() {
           <div className="text-center lg:text-left">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary backdrop-blur-sm">
               <Sparkles className="size-3.5" />
-              <span>Short links that actually get tracked</span>
+              <span>{t("badge")}</span>
             </div>
 
             <h1 className="text-balance text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
-              <span className="text-foreground">Short links,</span>
+              <span className="text-foreground">{t("title").split(",")[0]},</span>
               <br />
-              <span className="gradient-text">measurable clicks.</span>
+              <span className="gradient-text">{t("title").split(",")[1]?.trim()}</span>
             </h1>
 
             <p className="mx-auto mt-5 max-w-lg text-pretty text-base leading-relaxed text-muted-foreground lg:mx-0 lg:text-lg">
-              Create short, memorable links in seconds. Share them anywhere
-              — email, social, QR — and watch the clicks roll in from a clean
-              real-time dashboard.
+              {t("subtitle")}
             </p>
 
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
               <Link href="/signup">
                 <Button size="lg" className="gap-2 px-6">
-                  Get started free
+                  {t("ctaPrimary")}
                   <ArrowRight className="size-4" />
                 </Button>
               </Link>
               <Link href="/login">
                 <Button size="lg" variant="ghost" className="px-6">
-                  I already have an account
+                  {t("ctaSecondary")}
                 </Button>
               </Link>
             </div>
 
             <ul className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground lg:justify-start">
-              {["No credit card", "Free forever", "Set up in 30s"].map((t) => (
-                <li key={t} className="inline-flex items-center gap-1.5">
+              {[t("perk1"), t("perk2"), t("perk3")].map((item) => (
+                <li key={item} className="inline-flex items-center gap-1.5">
                   <CircleCheckBig className="size-3.5 text-primary" />
-                  <span>{t}</span>
+                  <span>{item}</span>
                 </li>
               ))}
             </ul>
@@ -89,47 +88,46 @@ export default async function Home() {
       <section className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
         <div className="mb-10 text-center">
           <p className="mb-2 text-xs font-medium uppercase tracking-[0.2em] text-primary">
-            What you get
+            {t("featuresTitle")}
           </p>
           <h2 className="text-balance text-3xl font-bold tracking-tight sm:text-4xl">
-            Everything a serious short link needs.
+            {t("featuresSubtitle").split(",")[0]}...
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
-            Built for makers, marketers, and teams who care about knowing which
-            links actually work.
+            {t("featuresSubtitle")}
           </p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <FeatureCard
             icon={Link2}
-            title="One-click short links"
-            description="Paste a long URL, pick a slug or auto-generate one. Done — no configuration hell."
+            title={t("feature1Title")}
+            description={t("feature1Desc")}
           />
           <FeatureCard
             icon={Activity}
-            title="Real-time analytics"
-            description="Clicks per day, week, month. Every click is recorded the moment it happens, no batch delays."
+            title={t("feature2Title")}
+            description={t("feature2Desc")}
           />
           <FeatureCard
             icon={MousePointerClick}
-            title="Click-through redirect"
-            description="Every short link runs through /r/[slug], so even clicks from your own dashboard get tracked."
+            title={t("feature3Title")}
+            description={t("feature3Desc")}
           />
           <FeatureCard
             icon={Database}
-            title="Your data stays yours"
-            description="Local Postgres by default. No third-party trackers, no analytics farms, no surprises."
+            title={t("feature4Title")}
+            description={t("feature4Desc")}
           />
           <FeatureCard
             icon={Gauge}
-            title="Lightning fast"
-            description="Built on Next.js 16 with a local-first architecture. Redirects happen in milliseconds."
+            title={t("feature5Title")}
+            description={t("feature5Desc")}
           />
           <FeatureCard
             icon={LayoutDashboard}
-            title="A dashboard you'll enjoy"
-            description="Purple-tinted dark mode, smooth animations, no clutter. Designed to feel premium, not enterprise."
+            title={t("feature6Title")}
+            description={t("feature6Desc")}
           />
         </div>
       </section>
@@ -142,16 +140,15 @@ export default async function Home() {
             className="pointer-events-none absolute -top-20 left-1/2 -z-0 size-[400px] -translate-x-1/2 rounded-full bg-primary/30 blur-3xl"
           />
           <h2 className="relative text-balance text-3xl font-bold tracking-tight sm:text-4xl">
-            Ready to see what your links are doing?
+            {t("ctaTitle")}
           </h2>
           <p className="relative mx-auto mt-3 max-w-lg text-muted-foreground">
-            Set up takes less than a minute. No card, no email confirmation
-            dance — just create an account and start shortening.
+            {t("ctaSubtitle")}
           </p>
           <div className="relative mt-6 flex justify-center">
             <Link href="/signup">
               <Button size="lg" className="gap-2 px-7">
-                Create your free account
+                {t("ctaButton")}
                 <ArrowRight className="size-4" />
               </Button>
             </Link>

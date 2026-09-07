@@ -2,9 +2,8 @@
 
 import * as React from "react";
 import { useActionState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useFormStatus } from "react-dom";
+import { Link, useRouter } from "@/i18n/navigation";
 import {
   AlertCircle,
   ArrowRight,
@@ -27,6 +26,7 @@ import {
   signUpAction,
   type AuthSuccess,
 } from "@/lib/actions/auth";
+import { useTranslations } from "next-intl";
 
 // Client-side validation schemas. These mirror the server rules in
 // lib/actions/auth.ts so users get immediate feedback before a network
@@ -58,6 +58,7 @@ function validateCredentialsClient(
 
 function SubmitButton({ label }: { label: string }) {
   const { pending } = useFormStatus();
+  const t = useTranslations("auth");
   return (
     <Button
       type="submit"
@@ -79,7 +80,7 @@ function SubmitButton({ label }: { label: string }) {
       {pending ? (
         <>
           <Loader2 className="mr-2 size-4 animate-spin" />
-          Please wait…
+          {t("loading")}
         </>
       ) : (
         <>
@@ -216,6 +217,7 @@ function FieldInput({
 }
 
 function PasswordStrength({ password }: { password: string }) {
+  const t = useTranslations("auth");
   const score = React.useMemo(() => {
     let s = 0;
     if (password.length >= 8) s++;
@@ -228,7 +230,12 @@ function PasswordStrength({ password }: { password: string }) {
 
   if (!password) return null;
 
-  const labels = ["Weak", "Fair", "Good", "Strong"];
+  const labels = [
+    t("passwordStrengthWeak"),
+    t("passwordStrengthFair"),
+    t("passwordStrengthGood"),
+    t("passwordStrengthStrong"),
+  ];
   const colors = [
     "bg-destructive",
     "bg-orange-500",
@@ -266,6 +273,7 @@ function PasswordField({
   error?: string;
   onValueChange?: (value: string) => void;
 }) {
+  const t = useTranslations("auth");
   const [show, setShow] = React.useState(false);
   const [value, setValue] = React.useState("");
 
@@ -280,7 +288,7 @@ function PasswordField({
         id={fieldName}
         name={fieldName}
         type={show ? "text" : "password"}
-        label="Password"
+        label={t("password")}
         icon={Lock}
         autoComplete={autoComplete}
         error={error}
@@ -297,7 +305,7 @@ function PasswordField({
               type="button"
               onClick={() => setShow((s) => !s)}
               tabIndex={-1}
-              aria-label={show ? "Hide password" : "Show password"}
+              aria-label={show ? t("hidePassword") : t("showPassword")}
               className="grid size-7 place-items-center rounded-md text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground active:scale-95"
             >
               {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -315,6 +323,7 @@ function PasswordField({
 // password field, so duplicating it in a white box above the form was noisy.
 
 export function AuthForm({ mode }: { mode: "login" | "signup" }) {
+  const t = useTranslations("auth");
   const router = useRouter();
   const action = mode === "login" ? signInAction : signUpAction;
   const [state, formAction] = useActionState<ActionResult<AuthSuccess>, FormData>(
@@ -363,15 +372,15 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
 
     toast.success(
       state.data.kind === "signed-up"
-        ? "Account created — welcome!"
-        : "Welcome back!",
+        ? t("accountCreated")
+        : t("welcomeBack"),
       { duration: 2500 },
     );
     window.setTimeout(() => {
       router.push("/dashboard");
       router.refresh();
     }, 900);
-  }, [state.data, router]);
+  }, [state.data, router, t]);
 
   // Handle form-level errors (no field binding). Same once-per-result guard.
   // When the server returns both a top-level message and field errors (e.g.
@@ -449,7 +458,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
         id="email"
         name="email"
         type="email"
-        label="you@example.com"
+        label={t("emailPlaceholder")}
         icon={Mail}
         autoComplete="email"
         error={visibleMergedError("email")}
@@ -468,25 +477,25 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
         !formLevelError && (
           <p className="-mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
             <ShieldCheck className="size-3.5 text-primary" />
-            At least 8 characters. Stronger passwords get a green score.
+            {t("passwordHint")}
           </p>
         )}
 
-      <SubmitButton label={isSignup ? "Create account" : "Log in"} />
+      <SubmitButton label={isSignup ? t("createAccount") : t("login")} />
 
       <div className="relative my-2 flex items-center text-xs uppercase tracking-wider text-muted-foreground/70">
         <span className="h-px flex-1 bg-border" />
-        <span className="px-3">or</span>
+        <span className="px-3">{t("or")}</span>
         <span className="h-px flex-1 bg-border" />
       </div>
 
       <p className="text-center text-sm text-muted-foreground">
-        {isSignup ? "Already have an account? " : "New here? "}
+        {isSignup ? t("hasAccount") + " " : t("newHere")}
         <Link
           href={isSignup ? "/login" : "/signup"}
           className="group/link inline-flex items-center gap-1 font-semibold text-foreground transition-colors duration-200 hover:text-primary"
         >
-          {isSignup ? "Log in" : "Create one"}
+          {isSignup ? t("login") : t("createOne")}
           <ArrowRight className="size-3.5 transition-transform duration-300 group-hover/link:translate-x-0.5" />
         </Link>
       </p>

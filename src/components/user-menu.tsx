@@ -1,10 +1,9 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { LogOut, LayoutDashboard } from "lucide-react";
+import { Link, useRouter } from "@/i18n/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,27 +15,30 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { signOutAction } from "@/lib/actions/auth";
+import { useTranslations } from "next-intl";
 
 function SignOutItem() {
   const { pending } = useFormStatus();
+  const t = useTranslations("userMenu");
   return (
     <DropdownMenuItem
       nativeButton
       render={<button type="submit" disabled={pending} />}
     >
       <LogOut className="mr-2 h-4 w-4" />
-      {pending ? "Signing out…" : "Sign out"}
+      {pending ? t("signingOut") : t("signOut")}
     </DropdownMenuItem>
   );
 }
 
 export function UserMenu({ email }: { email: string }) {
   const router = useRouter();
+  const t = useTranslations("userMenu");
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <Button variant="ghost" className="gap-2 px-2" aria-label="Account menu" />
+          <Button variant="ghost" className="gap-2 px-2" aria-label={t("account")} />
         }
       >
         <span className="grid h-7 w-7 place-items-center rounded-full bg-secondary text-xs font-semibold uppercase">
@@ -52,17 +54,17 @@ export function UserMenu({ email }: { email: string }) {
           <DropdownMenuSeparator />
           <DropdownMenuItem render={<Link href="/dashboard" />}>
             <LayoutDashboard className="mr-2 h-4 w-4" />
-            Dashboard
+            {t("dashboard")}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <form
             action={async () => {
               try {
                 await signOutAction();
-                toast.success("Signed out");
+                toast.success(t("signedOut"));
               } catch (e) {
                 toast.error(
-                  e instanceof Error ? e.message : "Could not sign out",
+                  e instanceof Error ? e.message : t("signOutFailed"),
                 );
                 return;
               }

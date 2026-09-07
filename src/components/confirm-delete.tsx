@@ -1,7 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { deleteLinkAction } from "@/lib/actions/links";
+import { useTranslations } from "next-intl";
 
 export function ConfirmDelete({
   linkId,
@@ -27,6 +28,7 @@ export function ConfirmDelete({
 }) {
   const [pending, startTransition] = useTransition();
   const router = useRouter();
+  const t = useTranslations("confirmDelete");
 
   const onConfirm = () => {
     startTransition(async () => {
@@ -35,7 +37,7 @@ export function ConfirmDelete({
         toast.error(res.error);
         return;
       }
-      toast.success(`Link /r/${slug} deleted.`);
+      toast.success(t("deleted", { slug }));
       router.refresh();
     });
   };
@@ -48,7 +50,7 @@ export function ConfirmDelete({
             variant="ghost"
             size="icon"
             className="text-muted-foreground hover:text-destructive"
-            aria-label={`Delete /r/${slug}`}
+            aria-label={t("deleted", { slug })}
           />
         }
       >
@@ -56,20 +58,19 @@ export function ConfirmDelete({
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete this short link?</AlertDialogTitle>
+          <AlertDialogTitle>{t("title")}</AlertDialogTitle>
           <AlertDialogDescription>
-            <span className="font-mono">/r/{slug}</span> will stop working and its
-            click history will be removed. This cannot be undone.
+            <span className="font-mono">/r/{slug}</span> — {t("desc")}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             disabled={pending}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {pending ? "Deleting…" : "Delete"}
+            {pending ? t("deleting") : t("delete")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

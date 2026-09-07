@@ -1,27 +1,30 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { ArrowUpRight, Check, Copy } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ConfirmDelete } from "@/components/confirm-delete";
 import { shortUrl } from "@/lib/config";
 import type { LinkWithClicks } from "@/lib/db/queries";
+import { useTranslations, useLocale } from "next-intl";
 
 export function LinkCard({ link }: { link: LinkWithClicks }) {
   const [copied, setCopied] = useState(false);
   const fullShortUrl = shortUrl(link.slug);
+  const t = useTranslations("linkCard");
+  const locale = useLocale();
 
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(fullShortUrl);
       setCopied(true);
-      toast.success("Short link copied to clipboard.");
+      toast.success(t("copySuccess"));
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      toast.error("Couldn't copy. Copy it manually:");
+      toast.error(t("copyFailed"));
     }
   };
 
@@ -56,10 +59,10 @@ export function LinkCard({ link }: { link: LinkWithClicks }) {
           <span className="font-semibold text-foreground">
             {link.clickCount}
           </span>{" "}
-          {link.clickCount === 1 ? "click" : "clicks"}
+          {t("visits")}
           <span className="mx-1.5">·</span>
           <span>
-            {new Date(link.createdAt).toLocaleDateString("en-US", {
+            {new Date(link.createdAt).toLocaleDateString(locale, {
               year: "numeric",
               month: "short",
               day: "numeric",
@@ -72,7 +75,7 @@ export function LinkCard({ link }: { link: LinkWithClicks }) {
             variant="outline"
             size="sm"
             onClick={copy}
-            aria-label="Copy short link"
+            aria-label={t("copy")}
           >
             {copied ? (
               <Check className="h-4 w-4" />
@@ -80,7 +83,7 @@ export function LinkCard({ link }: { link: LinkWithClicks }) {
               <Copy className="h-4 w-4" />
             )}
             <span className="hidden sm:inline">
-              {copied ? "Copied" : "Copy"}
+              {copied ? t("copied") : t("copy")}
             </span>
           </Button>
           <Button
@@ -89,7 +92,7 @@ export function LinkCard({ link }: { link: LinkWithClicks }) {
             nativeButton={false}
             render={<Link href={`/dashboard/links/${link.id}`} />}
           >
-            View
+            {t("view")}
           </Button>
         </div>
       </div>

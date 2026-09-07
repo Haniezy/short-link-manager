@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import { useActionState } from "react";
-import { useRouter } from "next/navigation";
 import { useFormStatus } from "react-dom";
+import { useRouter } from "@/i18n/navigation";
 import { toast } from "sonner";
 import {
   AlertCircle,
@@ -17,9 +17,11 @@ import { Button } from "@/components/ui/button";
 import { createLinkAction } from "@/lib/actions/links";
 import type { ActionResult } from "@/lib/result";
 import type { LinkWithClicks } from "@/lib/db/queries";
+import { useTranslations } from "next-intl";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
+  const t = useTranslations("linkForm");
   return (
     <Button
       type="submit"
@@ -41,11 +43,11 @@ function SubmitButton() {
       {pending ? (
         <>
           <Loader2 className="mr-2 size-4 animate-spin" />
-          Creating…
+          {t("creating")}
         </>
       ) : (
         <>
-          Create short link
+          {t("create")}
           <ArrowRight className="ml-1 size-4 transition-transform duration-300 group-hover/submit:translate-x-0.5" />
         </>
       )}
@@ -170,6 +172,7 @@ function FieldInput({
 
 export function LinkForm() {
   const router = useRouter();
+  const t = useTranslations("linkForm");
   const [state, formAction] = useActionState<
     ActionResult<LinkWithClicks>,
     FormData
@@ -205,10 +208,10 @@ export function LinkForm() {
     if (!state.data) return;
     if (lastHandledData.current === state.data) return;
     lastHandledData.current = state.data;
-    toast.success("Short link created!");
+    toast.success(t("created"));
     router.push("/dashboard");
     router.refresh();
-  }, [state.data, router]);
+  }, [state.data, router, t]);
 
   // Handle form-level errors (no field binding). Same once-per-result guard.
   const lastHandledError = React.useRef<string | null>(null);
@@ -254,13 +257,13 @@ export function LinkForm() {
 
       <div className="space-y-1.5">
         <label htmlFor="destinationUrl" className="text-sm font-medium">
-          Destination URL
+          {t("destination")}
         </label>
         <FieldInput
           id="destinationUrl"
           name="destinationUrl"
           type="url"
-          label="https://example.com/very/long/path"
+          label={t("destinationPlaceholder")}
           icon={Link2}
           required
           error={visibleFieldError("destinationUrl")}
@@ -270,14 +273,14 @@ export function LinkForm() {
 
       <div className="space-y-1.5">
         <label htmlFor="slug" className="text-sm font-medium">
-          Custom slug{" "}
-          <span className="font-normal text-muted-foreground">(optional)</span>
+          {t("slug")}{" "}
+          <span className="font-normal text-muted-foreground">({t("slugOptional")})</span>
         </label>
         <FieldInput
           id="slug"
           name="slug"
           type="text"
-          label="auto-generated"
+          label={t("slugPlaceholder")}
           icon={Type}
           prefix="/r/"
           pattern="[a-zA-Z0-9-]+"
@@ -285,21 +288,20 @@ export function LinkForm() {
           onValueChange={() => handleEdit("slug")}
         />
         <p className="text-xs text-muted-foreground">
-          Letters, numbers, and dashes. Leave blank to get a random 6-character
-          slug.
+          {t("slugHint")}
         </p>
       </div>
 
       <div className="space-y-1.5">
         <label htmlFor="title" className="text-sm font-medium">
-          Title{" "}
-          <span className="font-normal text-muted-foreground">(optional)</span>
+          {t("titleField")}{" "}
+          <span className="font-normal text-muted-foreground">({t("slugOptional")})</span>
         </label>
         <FieldInput
           id="title"
           name="title"
           type="text"
-          label="My awesome link"
+          label={t("titlePlaceholder")}
           icon={Type}
           maxLength={120}
           error={visibleFieldError("title")}

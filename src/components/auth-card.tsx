@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { Forward } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 import { AuthForm } from "@/components/auth-form";
 import {
   Card,
@@ -8,12 +8,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { getTranslations } from "next-intl/server";
 
 /**
  * Card body used by both /login and /signup. Keeps the visual frame and copy
  * in one place so the two pages only diverge on the form `mode`.
  */
-export function AuthCard({ mode }: { mode: "login" | "signup" }) {
+export async function AuthCard({ mode }: { mode: "login" | "signup" }) {
+  const t = await getTranslations("auth");
   const isSignup = mode === "signup";
   return (
     <Card className="card-glow border-primary/20 bg-card/80 backdrop-blur-xl">
@@ -28,12 +30,10 @@ export function AuthCard({ mode }: { mode: "login" | "signup" }) {
           <span>ShortLink</span>
         </Link>
         <CardTitle className="text-2xl">
-          {isSignup ? "Create your account" : "Welcome back"}
+          {isSignup ? t("signup") : t("login")}
         </CardTitle>
         <CardDescription>
-          {isSignup
-            ? "Start shortening links in less than a minute."
-            : "Log in to manage your short links."}
+          {isSignup ? t("signupDesc") : t("loginDesc")}
         </CardDescription>
       </CardHeader>
       <CardContent>

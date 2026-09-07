@@ -1,4 +1,5 @@
-import { redirect } from "next/navigation";
+import { redirect } from "@/i18n/navigation";
+import { getLocale } from "next-intl/server";
 import { auth, type AuthSession } from "./index";
 
 /**
@@ -8,7 +9,7 @@ import { auth, type AuthSession } from "./index";
 export async function requireSession(): Promise<AuthSession> {
   const session = await auth.getSession();
   if (!session) {
-    redirect("/login");
+    redirect({ href: "/login", locale: await getLocale() });
   }
-  return session;
+  return session!;
 }

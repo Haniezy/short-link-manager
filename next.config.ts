@@ -1,10 +1,10 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
+
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
-  // PGlite loads a WASM artifact at runtime. Keeping it external prevents
-  // Turbopack/webpack from bundling the WASM fs path, which otherwise throws
-  // "The path argument must be of type string ... Received an instance of URL".
   serverExternalPackages: ["@electric-sql/pglite"],
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

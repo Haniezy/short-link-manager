@@ -1,9 +1,10 @@
-import Link from "next/link";
 import { Forward } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "@/components/user-menu";
 import { AuthButtons } from "@/components/auth-buttons";
+import { LanguageToggle } from "@/components/language-toggle";
 
 export async function Navbar() {
   const session = await auth.getSession();
@@ -25,6 +26,7 @@ export async function Navbar() {
           ) : (
             <AuthButtons />
           )}
+          <LanguageToggle />
           <ThemeToggle />
         </div>
       </div>
