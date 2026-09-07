@@ -13,7 +13,7 @@ export function DashboardMockup() {
   const heights = [38, 56, 42, 78, 92, 64, 50];
 
   return (
-    <div className="mockup-shadow relative w-full overflow-hidden rounded-2xl border border-primary/20 bg-card/80 p-5 backdrop-blur-xl">
+    <div dir="ltr" className="mockup-shadow relative w-full overflow-hidden rounded-2xl border border-primary/20 bg-card/80 p-5 backdrop-blur-xl">
       {/* Browser-like chrome */}
       <div className="mb-4 flex items-center gap-2">
         <span className="size-2.5 rounded-full bg-primary/30" />
@@ -42,7 +42,7 @@ export function DashboardMockup() {
       {/* Bars chart */}
       <div className="mb-4 flex h-32 items-end gap-2">
         {days.map((d, i) => (
-          <div key={d} className="flex flex-1 flex-col items-center gap-1.5">
+          <div key={d} className="flex h-full flex-1 flex-col items-center justify-end gap-1.5">
             <div
               className="w-full rounded-t-md bg-gradient-to-t from-primary/40 to-primary"
               style={{ height: `${heights[i]}%` }}

@@ -41,6 +41,9 @@
   "home": {
     "badge": "Short links that actually get tracked",
     "title": "Short links, measurable clicks.",
+    "featuresHeading": "Built for makers…",
+    "titleHighlight": "measurable clicks.",
+    "titleLead": "Short links,",
     "subtitle": "Create short, memorable links in seconds. Share them anywhere and watch the clicks roll in from a clean real-time dashboard.",
     "ctaPrimary": "Get started free",
     "ctaSecondary": "I already have an account",

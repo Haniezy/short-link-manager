@@ -36,16 +36,16 @@ export default async function Home() {
       {/* HERO */}
       <section className="mx-auto max-w-6xl px-4 pt-16 pb-20 sm:pt-24 sm:pb-28">
         <div className="grid items-center gap-12 lg:grid-cols-2">
-          <div className="text-center lg:text-left">
+          <div className="text-center lg:text-start">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary backdrop-blur-sm">
               <Sparkles className="size-3.5" />
               <span>{t("badge")}</span>
             </div>
 
             <h1 className="text-balance text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
-              <span className="text-foreground">{t("title").split(",")[0]},</span>
+              <span className="text-foreground">{t("titleLead")}</span>
               <br />
-              <span className="gradient-text">{t("title").split(",")[1]?.trim()}</span>
+              <span className="gradient-text">{t("titleHighlight")}</span>
             </h1>
 
             <p className="mx-auto mt-5 max-w-lg text-pretty text-base leading-relaxed text-muted-foreground lg:mx-0 lg:text-lg">
@@ -91,7 +91,7 @@ export default async function Home() {
             {t("featuresTitle")}
           </p>
           <h2 className="text-balance text-3xl font-bold tracking-tight sm:text-4xl">
-            {t("featuresSubtitle").split(",")[0]}...
+            {t("featuresHeading")}
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
             {t("featuresSubtitle")}
