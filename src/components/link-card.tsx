@@ -14,12 +14,12 @@ export function LinkCard({ link }: { link: LinkWithClicks }) {
   const locale = useLocale();
 
   return (
-    <Card className="flex flex-col gap-3 p-4 shadow-[0_2px_6px_-2px_oklch(0.575_0.205_294/0.18),0_12px_32px_-12px_oklch(0.575_0.205_294/0.25)] ring-1 ring-primary/15 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_-4px_oklch(0.575_0.205_294/0.28),0_20px_40px_-12px_oklch(0.575_0.205_294/0.35)]">
+    <Card className="relative isolate flex flex-col gap-3 p-4 shadow-[0_2px_6px_-2px_oklch(0.575_0.205_294/0.18),0_12px_32px_-12px_oklch(0.575_0.205_294/0.25)] ring-1 ring-primary/15 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_-4px_oklch(0.575_0.205_294/0.28),0_20px_40px_-12px_oklch(0.575_0.205_294/0.35)]">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <Link
             href={`/dashboard/links/${link.id}`}
-            className="block font-mono text-sm font-semibold text-primary hover:underline"
+            className="block font-mono text-sm font-semibold text-primary hover:underline after:absolute after:inset-0 after:z-0 after:cursor-pointer after:content-[''] focus-visible:outline-none focus-visible:after:rounded-xl focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-primary"
           >
             /r/{link.slug}
           </Link>
@@ -30,13 +30,15 @@ export function LinkCard({ link }: { link: LinkWithClicks }) {
             href={`/r/${link.slug}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1 truncate text-xs text-muted-foreground hover:underline"
+            className="relative z-10 flex items-center gap-1 truncate text-xs text-muted-foreground hover:underline"
           >
             <span className="truncate">{link.destinationUrl}</span>
             <ArrowUpRight className="h-3 w-3 shrink-0 text-primary/70" />
           </a>
         </div>
-        <ConfirmDelete linkId={link.id} slug={link.slug} />
+        <div className="relative z-10 shrink-0">
+          <ConfirmDelete linkId={link.id} slug={link.slug} />
+        </div>
       </div>
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -55,7 +57,7 @@ export function LinkCard({ link }: { link: LinkWithClicks }) {
             })}
           </span>
         </div>
-        <div className="flex gap-1">
+        <div className="relative z-10 flex gap-1">
           <CopyLinkButton slug={link.slug} compact />
           <Button
             variant="outline"
