@@ -50,7 +50,7 @@ export function LanguageToggle() {
         {locales.map((item) => (
           <DropdownMenuItem
             key={item.value}
-            onSelect={() => handleChange(item.value)}
+            onClick={() => handleChange(item.value)}
             className="flex items-center justify-between gap-2"
           >
             <span>{item.label}</span>

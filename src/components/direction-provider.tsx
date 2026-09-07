@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { DirectionProvider as BaseDirectionProvider } from "@base-ui/react/direction-provider";
 
 export function DirectionProvider({
   locale,
@@ -14,5 +15,9 @@ export function DirectionProvider({
     document.documentElement.lang = locale;
   }, [locale]);
 
-  return <>{children}</>;
+  return (
+    <BaseDirectionProvider direction={locale === "fa" ? "rtl" : "ltr"}>
+      {children}
+    </BaseDirectionProvider>
+  );
 }
