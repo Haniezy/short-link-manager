@@ -1,31 +1,68 @@
 # ShortLink
 
-A small but production-quality short-link manager: create short links
-(`yoursite.com/r/abc123`), share them, and track clicks from a clean dashboard.
-
-Built with **Next.js 16 (App Router) · TypeScript strict · Tailwind CSS v4 ·
-shadcn/ui · Drizzle ORM · Neon Postgres · Neon Auth · Server Actions ·
-next-themes · sonner · recharts**. Package manager: **pnpm**.
+A production-ready short-link manager built with Next.js. Authenticated users
+can create, copy, visit, analyze, and delete short links from a responsive
+dashboard.
 
 ## Deployed URL
 
-> **https://short-link-manager-rose.vercel.app/**
+https://short-link-manager-rose.vercel.app
+
+## Features
+
+- Email and password sign-up, sign-in, and sign-out
+- Protected dashboard
+- Custom or automatically generated six-character slugs
+- Server-side validation with Zod
+- 307 redirects through `/r/[slug]`
+- Click tracking
+- Seven-day clicks chart
+- Copy-to-clipboard support
+- Link deletion with a confirmation dialog
+- Responsive light and dark themes
+- Loading skeletons and error boundaries
+- Toast notifications for successful and failed actions
+
+## Tech stack
+
+- Next.js 16 with App Router
+- React and TypeScript with strict mode
+- Tailwind CSS v4
+- shadcn/ui
+- Drizzle ORM
+- Neon Postgres
+- Neon Auth
+- Server Components
+- Server Actions
+- Zod
+- Recharts
+- next-themes
+- Sonner
+- pnpm
 
 ## Local setup
 
-### 1. Prerequisites
+### Prerequisites
 
-- Node.js 20.9+ (built with Node 24)
-- pnpm (`npm i -g pnpm`)
-- A free [Neon](https://neon.tech) account — instant signup, no credit card
+Install the following tools:
 
-### 2. Install
+- Node.js 20.9 or newer
+- pnpm
+- A Neon account
+
+Install pnpm globally if it is not already installed:
+
+```bash
+npm install -g pnpm
+```
+
+### 1. Install
 
 ```bash
 pnpm install
 ```
 
-### 3. Create a Neon project (Neon mode only)
+### 2. Create a Neon project (Neon mode only)
 
 Neon is required **only** if you want the hosted Postgres + Neon Auth path. To
 skip it entirely and run fully offline, omit these vars from `.env.local` and
@@ -36,11 +73,9 @@ the app auto-falls-back to PGlite + local email/password auth.
 3. Enable **Neon Auth** for the project and note its **base URL**
    (your project's auth endpoint).
 
-### 4. Configure environment variables
+### 3. Configure environment variables
 
-```bash
 cp .env.example .env.local
-```
 
 **Neon mode** — set `DATABASE_URL`, `NEON_AUTH_BASE_URL`, and
 `NEON_AUTH_COOKIE_SECRET`:
@@ -54,13 +89,11 @@ cp .env.example .env.local
 
 **Local (offline) mode** — just set these and leave `DATABASE_URL` empty:
 
-| Variable                   | What it is                                             |
-| -------------------------- | ------------------------------------------------------ |
 | `NEXT_PUBLIC_BASE_URL`     | `http://localhost:3000`                                |
 | `LOCAL_AUTH_SECRET`        | Random 32+ char secret (`openssl rand -hex 32`)        |
 | `PGLOCAL_DIR`              | `".pglocal"` (where PGlite stores data)                |
 
-### 5. Create the tables
+### 4. Create the tables
 
 - **Neon mode**: generate the schema SQL, then paste it into the Neon SQL
   editor (Neon supports standard `psql`):
@@ -72,7 +105,7 @@ cp .env.example .env.local
 - **Local mode**: nothing to do — PGlite bootstraps its schema automatically on
   first run.
 
-### 6. Run
+### 5. Run
 
 ```bash
 pnpm dev
