@@ -26,9 +26,7 @@ function validateCredentials(
   return fieldErrors;
 }
 
-export type AuthSuccess =
-  | { kind: "signed-in" }
-  | { kind: "signed-up" };
+export type AuthSuccess = { kind: "signed-in" } | { kind: "signed-up" };
 
 export async function signUpAction(
   _prev: ActionResult<AuthSuccess>,
@@ -43,7 +41,9 @@ export async function signUpAction(
     return err("Please fix the errors below.", fieldErrors);
   }
 
-  const { error } = await auth.signUp({ email, password });
+  const { error } = await auth
+    .signUp({ email, password })
+    .catch(() => ({ error: "unavailable" }));
 
   if (error) {
     if (/already exists/i.test(error)) {
@@ -71,7 +71,9 @@ export async function signInAction(
     return err("Please fix the errors below.", fieldErrors);
   }
 
-  const { error } = await auth.signIn({ email, password });
+  const { error } = await auth
+    .signIn({ email, password })
+    .catch(() => ({ error: "unavailable" }));
 
   if (error) {
     return err("Invalid email or password.");
@@ -80,6 +82,15 @@ export async function signInAction(
   return ok({ kind: "signed-in" });
 }
 
-export async function signOutAction(): Promise<void> {
-  await auth.signOut();
+export async function signOutAction(): Promise<
+  ActionResult<{ signedOut: true }>
+> {
+  try {
+    const { error } = await auth.signOut();
+    return error
+      ? err("Could not sign out. Please try again.")
+      : ok({ signedOut: true });
+  } catch {
+    return err("Could not sign out. Please try again.");
+  }
 }

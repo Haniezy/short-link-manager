@@ -1,7 +1,14 @@
-import { and, count, desc, eq, gte, sql, type InferSelectModel } from "drizzle-orm";
+import {
+  and,
+  count,
+  desc,
+  eq,
+  gte,
+  sql,
+  type InferSelectModel,
+} from "drizzle-orm";
 import { getDb } from "./client";
-import { ensureSchema } from "./migrate";
-import { clicks, links, users, type Link } from "./schema";
+import { clicks, links, profiles, type Link } from "./schema";
 
 type LinkRow = InferSelectModel<typeof links>;
 
@@ -9,16 +16,15 @@ export type LinkWithClicks = Link & { clickCount: number };
 
 /**
  * All database access lives here. UI/server actions call these functions and
- * never touch `db` directly, keeping a clean separation of concerns. Every
- * function ensures the schema exists (idempotent) before querying, so no
- * external migration step is required.
+ * never touch `db` directly, keeping a clean separation of concerns. Schema changes are applied through Drizzle migrations.
  */
 async function ready() {
-  await ensureSchema();
   return getDb();
 }
 
-export async function getLinksByUser(userId: string): Promise<LinkWithClicks[]> {
+export async function getLinksByUser(
+  userId: string,
+): Promise<LinkWithClicks[]> {
   const database = await ready();
   const rows = await database
     .select({
@@ -31,7 +37,10 @@ export async function getLinksByUser(userId: string): Promise<LinkWithClicks[]> 
     .groupBy(links.id)
     .orderBy(desc(links.createdAt));
 
-  return rows.map((row: { link: LinkRow; clickCount: string | number }) => ({ ...row.link, clickCount: Number(row.clickCount) }));
+  return rows.map((row: { link: LinkRow; clickCount: string | number }) => ({
+    ...row.link,
+    clickCount: Number(row.clickCount),
+  }));
 }
 
 export async function getLinkById(
@@ -87,7 +96,10 @@ export async function insertLink(input: InsertLink): Promise<Link> {
   return link;
 }
 
-export async function deleteLinkById(id: string, userId: string): Promise<boolean> {
+export async function deleteLinkById(
+  id: string,
+  userId: string,
+): Promise<boolean> {
   const database = await ready();
   const deleted = await database
     .delete(links)
@@ -124,9 +136,16 @@ export async function getClicksPerDay(
     })
     .from(clicks)
     .where(and(eq(clicks.linkId, linkId), gte(clicks.clickedAt, since)))
-    .groupBy(sql`to_char(${clicks.clickedAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD')`);
+    .groupBy(
+      sql`to_char(${clicks.clickedAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD')`,
+    );
 
-  const byDay = new Map(rows.map((r: { day: string; clicks: string | number }) => [r.day, Number(r.clicks)]));
+  const byDay = new Map(
+    rows.map((r: { day: string; clicks: string | number }) => [
+      r.day,
+      Number(r.clicks),
+    ]),
+  );
   const series: DailyClicks[] = [];
   for (let i = 0; i < days; i += 1) {
     const d = new Date(since);
@@ -137,21 +156,35 @@ export async function getClicksPerDay(
   return series;
 }
 
-export async function getUserByEmail(email: string) {
-  const database = await ready();
-  const [user] = await database
+export async function getProfile(userId: string) {
+  const db = await ready();
+  const [profile] = await db
     .select()
-    .from(users)
-    .where(eq(users.email, email))
-    .limit(1);
-  return user ?? null;
+    .from(profiles)
+    .where(eq(profiles.userId, userId));
+  const [stats] = await db
+    .select({ total: count(links.id) })
+    .from(links)
+    .where(eq(links.userId, userId));
+  const [activity] = await db
+    .select({ last: sql<Date | null>`max(${clicks.clickedAt})` })
+    .from(clicks)
+    .innerJoin(links, eq(clicks.linkId, links.id))
+    .where(eq(links.userId, userId));
+  return {
+    profile,
+    count: Number(stats.total),
+    lastActivity: activity.last ? new Date(activity.last).toISOString() : null,
+  };
 }
 
-export async function insertUser(input: {
-  email: string;
-  passwordHash: string;
-}) {
-  const database = await ready();
-  const [user] = await database.insert(users).values(input).returning();
-  return user;
+export async function updateProfile(
+  userId: string,
+  data: { displayName: string; avatarUrl: string; bio: string },
+) {
+  const db = await ready();
+  await db
+    .insert(profiles)
+    .values({ userId, ...data })
+    .onConflictDoUpdate({ target: profiles.userId, set: data });
 }

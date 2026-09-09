@@ -1,16 +1,8 @@
 import { neonAuthProvider } from "./neon-auth";
-import { localAuthProvider } from "./local-auth";
 import type { AuthProvider, AuthSession } from "./types";
 
-/**
- * Auth provider selection:
- * - If Neon Auth env vars are present, use the Neon-backed provider.
- * - Otherwise, fall back to the local email/password provider.
- */
-const provider: AuthProvider =
-  process.env.NEON_AUTH_BASE_URL && process.env.NEON_AUTH_COOKIE_SECRET
-    ? neonAuthProvider
-    : localAuthProvider;
+// Neon Auth is the only authentication provider required by the project brief.
+const provider: AuthProvider = neonAuthProvider;
 
 export const auth: AuthProvider = provider;
 

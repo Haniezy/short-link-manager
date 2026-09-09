@@ -1,24 +1,6 @@
 import { pgTable, uuid, text, timestamp, index } from "drizzle-orm/pg-core";
 
 /**
- * Local auth users (replaces Neon Auth). Passwords are stored hashed (bcrypt).
- */
-export const users = pgTable(
-  "users",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    email: text("email").notNull().unique(),
-    passwordHash: text("password_hash").notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .defaultNow()
-      .notNull(),
-  },
-  (table) => ({
-    emailIdx: index("users_email_idx").on(table.email),
-  }),
-);
-
-/**
  * Short links owned by a user.
  *
  * `slug` is globally unique (not per-user) because the public redirect route
@@ -68,3 +50,10 @@ export const clicks = pgTable(
 export type Link = typeof links.$inferSelect;
 export type NewLink = typeof links.$inferInsert;
 export type Click = typeof clicks.$inferSelect;
+
+export const profiles = pgTable("profiles", {
+  userId: text("user_id").primaryKey(),
+  displayName: text("display_name").notNull(),
+  avatarUrl: text("avatar_url").notNull().default(""),
+  bio: text("bio").notNull().default(""),
+});

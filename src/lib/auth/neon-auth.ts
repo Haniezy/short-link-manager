@@ -1,5 +1,10 @@
 import { createNeonAuth } from "@neondatabase/auth/next/server";
-import type { AuthProvider, AuthSession, SignInInput, SignUpInput } from "./types";
+import type {
+  AuthProvider,
+  AuthSession,
+  SignInInput,
+  SignUpInput,
+} from "./types";
 
 /**
  * Neon Auth implementation of the AuthProvider contract.
@@ -25,7 +30,8 @@ const neonAuth =
     ? createNeonAuth({ baseUrl, cookies: { secret: cookieSecret } })
     : null;
 
-const NOT_CONFIGURED = "Authentication is not configured. Set NEON_AUTH_* env vars.";
+const NOT_CONFIGURED =
+  "Authentication is not configured. Set NEON_AUTH_* env vars.";
 
 export const neonAuthProvider: AuthProvider = {
   async getSession(): Promise<AuthSession | null> {
@@ -36,6 +42,9 @@ export const neonAuthProvider: AuthProvider = {
       user: {
         id: session.user.id,
         email: session.user.email ?? "",
+        name: session.user.name,
+        image: session.user.image,
+        createdAt: new Date(session.user.createdAt).toISOString(),
       },
     };
   },
@@ -92,4 +101,28 @@ export function neonAuthHandlers(): {
     GET: (request: Request, ctx: unknown) => Promise<Response>;
     POST: (request: Request, ctx: unknown) => Promise<Response>;
   };
+}
+
+/** Keep the Neon SDK isolated behind the auth layer. */
+export async function changeNeonPassword(
+  currentPassword: string,
+  newPassword: string,
+) {
+  if (!neonAuth) return { data: null, error: "session" };
+  try {
+    const result = await neonAuth.changePassword({
+      currentPassword,
+      newPassword,
+      revokeOtherSessions: true,
+    });
+    if (result.error)
+      return {
+        data: null,
+        error:
+          result.error.code === "INVALID_PASSWORD" ? "passwordWrong" : "failed",
+      };
+    return { data: { changed: true }, error: null };
+  } catch {
+    return { data: null, error: "failed" };
+  }
 }

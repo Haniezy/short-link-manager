@@ -2,7 +2,7 @@
 
 import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
-import { LogOut, LayoutDashboard } from "lucide-react";
+import { LogOut, LayoutDashboard, UserRound } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import {
   DropdownMenu,
@@ -38,7 +38,11 @@ export function UserMenu({ email }: { email: string }) {
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <Button variant="ghost" className="gap-2 px-2" aria-label={t("account")} />
+          <Button
+            variant="ghost"
+            className="gap-2 px-2"
+            aria-label={t("account")}
+          />
         }
       >
         <span className="grid h-7 w-7 place-items-center rounded-full bg-secondary text-xs font-semibold uppercase">
@@ -56,11 +60,19 @@ export function UserMenu({ email }: { email: string }) {
             <LayoutDashboard className="mr-2 h-4 w-4" />
             {t("dashboard")}
           </DropdownMenuItem>
+          <DropdownMenuItem render={<Link href="/profile" />}>
+            <UserRound className="size-4" />
+            {t("profile")}
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <form
             action={async () => {
               try {
-                await signOutAction();
+                const result = await signOutAction();
+                if (result.error) {
+                  toast.error(t("signOutFailed"));
+                  return;
+                }
                 toast.success(t("signedOut"));
               } catch (e) {
                 toast.error(

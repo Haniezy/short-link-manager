@@ -62,16 +62,12 @@ npm install -g pnpm
 pnpm install
 ```
 
-### 2. Create a Neon project (Neon mode only)
+### 2. Create a Neon project
 
-Neon is required **only** if you want the hosted Postgres + Neon Auth path. To
-skip it entirely and run fully offline, omit these vars from `.env.local` and
-the app auto-falls-back to PGlite + local email/password auth.
-
-1. Create a project in the [Neon console](https://console.neon.tech).
-2. Copy the **connection string** (`postgresql://…`) from the dashboard.
-3. Enable **Neon Auth** for the project and note its **base URL**
-   (your project's auth endpoint).
+Neon Postgres and Neon Auth are required in both local development and production.
+Create a project in the [Neon console](https://console.neon.tech), copy its
+Postgres connection string, and enable Neon Auth to obtain the auth base URL.
+There is no local authentication or offline database fallback.
 
 ### 3. Configure environment variables
 
@@ -87,23 +83,18 @@ cp .env.example .env.local
 | `NEON_AUTH_BASE_URL`       | Base URL of your Neon Auth instance                    |
 | `NEON_AUTH_COOKIE_SECRET`  | Random 32+ char secret for signing session cookies (`openssl rand -hex 32`) |
 
-**Local (offline) mode** — just set these and leave `DATABASE_URL` empty:
+### 4. Apply migrations
 
-| `NEXT_PUBLIC_BASE_URL`     | `http://localhost:3000`                                |
-| `LOCAL_AUTH_SECRET`        | Random 32+ char secret (`openssl rand -hex 32`)        |
-| `PGLOCAL_DIR`              | `".pglocal"` (where PGlite stores data)                |
+```bash
+pnpm exec drizzle-kit migrate
+```
 
-### 4. Create the tables
-
-- **Neon mode**: generate the schema SQL, then paste it into the Neon SQL
-  editor (Neon supports standard `psql`):
-
-  ```bash
-  pnpm exec drizzle-kit generate   # writes ./drizzle/0000_*.sql
-  ```
-
-- **Local mode**: nothing to do — PGlite bootstraps its schema automatically on
-  first run.
+The configuration reads `.env.local` and connects to Neon Postgres. For an
+existing database whose original schema was created manually, apply only the
+unapplied SQL files in the Neon SQL editor instead of replaying the initial
+migration. `0001_profiles.sql` adds profile storage; `0002_remove_local_users.sql`
+removes the obsolete, empty `public.users` table. It refuses to remove a
+nonempty table. Neon Auth owns its own user records; those are never dropped.
 
 ### 5. Run
 
@@ -125,32 +116,19 @@ visit `/r/<slug>` → watch the click count go up.
 | `pnpm exec tsc --noEmit`  | Type-check (strict)                   |
 | `pnpm exec drizzle-kit generate` | Generate schema SQL (apply in Neon SQL editor) |
 
-## Auto-selected backends (Neon or fully local)
+## Authentication and profiles
 
-The app switches between Neon and a fully-offline local stack **automatically**
-based on which environment variables are present — no code changes or file
-swaps needed:
+Neon Auth handles registration, login, logout and sessions in every environment.
+`requireSession()` protects dashboard and profile routes. Profile passwords are
+changed through Neon Auth, with other sessions revoked; the app never hashes
+or stores passwords. Missing Neon configuration does not enable another provider.
 
-- **Neon mode** (production / anything with `DATABASE_URL` set) uses Neon
-  Postgres via the HTTP driver and Neon Auth.
-- **Local mode** (no `DATABASE_URL`) runs **fully offline**: the DB driver is
-  **PGlite** (real Postgres in-process over WASM), with data persisted to a
-  local folder (`.pglocal/`). The schema is created on first boot by
-  `src/lib/db/migrate.ts` — no migration command required.
-  Auth is the **local email/password** provider (`bcryptjs` + a signed
-  httpOnly cookie); sessions live in the cookie, nothing external is contacted.
-
-Local `.env.local` only needs:
-
-```
-NEXT_PUBLIC_BASE_URL="http://localhost:3000"
-LOCAL_AUTH_SECRET="<generated via openssl rand -hex 32>"
-PGLOCAL_DIR=".pglocal"
-```
-
-Set `DATABASE_URL` (along with `NEON_AUTH_BASE_URL` and
-`NEON_AUTH_COOKIE_SECRET`) on Vercel or any Neon-connectable environment to
-opt back into Neon automatically.
+The account menu opens `/profile` (`/fa/profile` in Persian). Profile name,
+HTTPS avatar URL and biography are stored in Neon Postgres. Membership dates
+come from Neon Auth; link counts and last link visits come from the app tables.
+Theme and language preferences currently persist in the browser. Email changes
+and two-factor setup are explicitly unavailable; they do not simulate security
+features. All profile mutations use validated Server Actions.
 
 ## Deploying to Vercel
 
