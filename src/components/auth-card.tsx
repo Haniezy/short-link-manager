@@ -4,15 +4,16 @@ import { AuthForm } from "@/components/auth-form";
 import { getTranslations } from "next-intl/server";
 
 /**
- * Card body used by both /login and /signup. Keeps the visual frame and copy
- * in one place so the two pages only diverge on the form `mode`.
+ * Header + form body used by both /login and /signup. Keeps the logo and copy
+ * in one place so the two pages only diverge on the form `mode`. Rendered
+ * directly on the auth background (no card frame).
  */
 export async function AuthCard({ mode }: { mode: "login" | "signup" }) {
   const t = await getTranslations("auth");
   const isSignup = mode === "signup";
   return (
-    <div className="rounded-2xl bg-card/60 p-6 backdrop-blur-xl sm:p-8">
-      <div className="mb-6 flex flex-col items-center text-center sm:items-start sm:text-left">
+    <>
+      <div className="mb-6 flex flex-col items-center text-center sm:items-start sm:text-start">
         <Link
           href="/"
           className="mb-3 inline-flex items-center gap-2 text-sm font-semibold tracking-tight"
@@ -30,6 +31,6 @@ export async function AuthCard({ mode }: { mode: "login" | "signup" }) {
         </p>
       </div>
       <AuthForm mode={mode} />
-    </div>
+    </>
   );
 }
