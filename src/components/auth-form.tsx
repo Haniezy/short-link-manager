@@ -265,11 +265,13 @@ function PasswordStrength({ password }: { password: string }) {
 function PasswordField({
   name: fieldName,
   autoComplete,
+  showStrength = false,
   error,
   onValueChange,
 }: {
   name: string;
   autoComplete: string;
+  showStrength?: boolean;
   error?: string;
   onValueChange?: (value: string) => void;
 }) {
@@ -313,7 +315,7 @@ function PasswordField({
           </div>
         }
       />
-      {!error && <PasswordStrength password={value} />}
+      {showStrength && !error && <PasswordStrength password={value} />}
     </div>
   );
 }
@@ -468,6 +470,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
       <PasswordField
         name="password"
         autoComplete={isSignup ? "new-password" : "current-password"}
+        showStrength={isSignup}
         error={visibleMergedError("password") ?? formLevelError}
         onValueChange={() => handleEdit("password")}
       />
