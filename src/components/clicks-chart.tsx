@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { MousePointerClick } from "lucide-react";
 import {
   Bar,
@@ -17,14 +18,17 @@ import type { DailyClicks } from "@/lib/db/queries";
  * bucketed in UTC, so format with an explicit UTC timezone so the label
  * matches the bucket regardless of the viewer's locale clock.
  */
-function formatDay(iso: string): string {
+function formatDay(iso: string, locale: string): string {
   const d = new Date(`${iso}T00:00:00Z`);
-  return d.toLocaleDateString(undefined, { weekday: "short", timeZone: "UTC" });
+  return d.toLocaleDateString(locale, { weekday: "short", timeZone: "UTC" });
 }
 
 export function ClicksChart({ data }: { data: DailyClicks[] }) {
+  const locale = useLocale();
+  const t = useTranslations("chart");
+  const number = new Intl.NumberFormat(locale);
   const chartData = data.map((d) => ({
-    day: formatDay(d.date),
+    day: formatDay(d.date, locale),
     date: d.date,
     clicks: d.clicks,
   }));
@@ -39,10 +43,10 @@ export function ClicksChart({ data }: { data: DailyClicks[] }) {
             <MousePointerClick className="size-5" strokeWidth={2} />
           </span>
           <p className="text-sm font-medium text-foreground">
-            No clicks in the last 7 days yet
+            {t("emptyTitle")}
           </p>
           <p className="max-w-[18rem] text-xs text-muted-foreground">
-            Share the short link and the chart will populate as people visit it.
+            {t("emptyHint")}
           </p>
         </div>
       ) : (
@@ -57,24 +61,32 @@ export function ClicksChart({ data }: { data: DailyClicks[] }) {
             />
             <YAxis
               allowDecimals={false}
+              tickFormatter={(value) => number.format(Number(value))}
               tickLine={false}
               axisLine={false}
               className="text-xs text-muted-foreground"
             />
             <Tooltip
-              cursor={{ fill: "hsl(var(--muted))", opacity: 0.4 }}
+              cursor={{ fill: "var(--muted)", opacity: 0.4 }}
               contentStyle={{
                 borderRadius: 8,
-                border: "1px solid hsl(var(--border))",
-                background: "hsl(var(--popover))",
-                color: "hsl(var(--popover-foreground))",
+                border: "1px solid var(--border)",
+                background: "var(--popover)",
+                color: "var(--popover-foreground)",
                 fontSize: 12,
               }}
-              labelFormatter={(_label, payload) =>
-                payload?.[0]?.payload?.date ?? ""
-              }
+              formatter={(value) => [number.format(Number(value)), t("clicks")]}
+              labelFormatter={(_label, payload) => {
+                const date = payload?.[0]?.payload?.date;
+                return date
+                  ? new Intl.DateTimeFormat(locale, {
+                      dateStyle: "medium",
+                      timeZone: "UTC",
+                    }).format(new Date(`${date}T00:00:00Z`))
+                  : "";
+              }}
             />
-            <Bar dataKey="clicks" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
+            <Bar dataKey="clicks" fill="var(--primary)" radius={[6, 6, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       )}

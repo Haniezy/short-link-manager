@@ -2,9 +2,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 
-export default async function NotFound({ params }: { params?: Promise<{ locale: string }> }) {
-  const { locale } = (await params) ?? { locale: "en" };
-  const t = await getTranslations({ locale, namespace: "notFound" });
+export default async function NotFound() {
+  const t = await getTranslations("notFound");
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-4 text-center">

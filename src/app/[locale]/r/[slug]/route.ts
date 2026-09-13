@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFoundResponse } from "@/lib/not-found-response";
 import { revalidateTag } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { after } from "next/server";
@@ -25,13 +25,13 @@ import { getLinkBySlug, recordClick } from "@/lib/db/queries";
  */
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> },
-): Promise<NextResponse> {
-  const { slug } = await params;
+  { params }: { params: Promise<{ slug: string; locale: string }> },
+): Promise<Response> {
+  const { slug, locale } = await params;
   const link = await getLinkBySlug(slug);
 
   if (!link) {
-    notFound();
+    return notFoundResponse(locale);
   }
 
   await recordClick(link.id);

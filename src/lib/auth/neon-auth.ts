@@ -119,7 +119,7 @@ export async function changeNeonPassword(
       return {
         data: null,
         error:
-          result.error.code === "INVALID_PASSWORD" ? "passwordWrong" : "failed",
+          ["INVALID_PASSWORD", "invalid_credentials"].includes(result.error.code ?? "") ? "passwordWrong" : "failed",
       };
     return { data: { changed: true }, error: null };
   } catch {

@@ -188,5 +188,36 @@
     "hide": "Hide passwords",
     "unsaved": "You have unsaved changes",
     "photoAlt": "Profile photo"
+  },
+  "validation": {
+    "urlInvalid": "Enter a valid URL.",
+    "urlProtocol": "URL must start with http:// or https://",
+    "slugCharacters": "Slug may only contain letters, numbers, and dashes.",
+    "slugShort": "Slug must be at least 3 characters.",
+    "slugLong": "Slug must be at most 32 characters.",
+    "titleLong": "Title must be at most 120 characters.",
+    "emailInvalid": "Enter a valid email address.",
+    "passwordShort": "Password must be at least 8 characters.",
+    "linkIdInvalid": "Invalid link ID.",
+    "emailRequired": "Email is required.",
+    "fixFields": "Please fix the errors below.",
+    "emailExists": "An account with this email already exists.",
+    "signupFailed": "Could not create your account. Please try again.",
+    "loginFailed": "Invalid email or password.",
+    "signoutFailed": "Could not sign out. Please try again.",
+    "session": "You must be signed in.",
+    "slugGenerate": "Could not generate a unique slug. Please try again.",
+    "slugTaken": "That slug is already taken.",
+    "slugTakenHint": "That slug is already taken. Please choose another.",
+    "createFailed": "Something went wrong creating your link. Please try again.",
+    "deleteFailed": "Could not delete the link. Please try again.",
+    "notFound": "Link not found.",
+    "loadFailed": "Could not load your links. Please try again.",
+    "loadOneFailed": "Could not load the link. Please try again."
+  },
+  "chart": {
+    "emptyTitle": "No clicks in the last 7 days yet",
+    "emptyHint": "Share the short link and the chart will populate as people visit it.",
+    "clicks": "Clicks"
   }
 }

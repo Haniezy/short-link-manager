@@ -1,3 +1,4 @@
+import { linkIdSchema } from "@/lib/validation";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
@@ -20,15 +21,18 @@ export default async function LinkDetailPage({
 }) {
   const { id, locale } = await params;
   const session = await requireSession();
-  const link = await getLinkById(id, session.user.id);
+  const parsedId = linkIdSchema.safeParse(id);
+  if (!parsedId.success) notFound();
+  const link = await getLinkById(parsedId.data, session.user.id);
   if (!link) notFound();
   const t = await getTranslations({ locale, namespace: "linkDetail" });
 
   const daily = await getClicksPerDay(link.id, 7);
-  const created = new Date(link.createdAt).toLocaleDateString(undefined, {
+  const created = new Date(link.createdAt).toLocaleDateString(locale, {
     year: "numeric",
     month: "short",
     day: "numeric",
+    timeZone: "UTC",
   });
 
   return (
@@ -61,7 +65,7 @@ export default async function LinkDetailPage({
               {t("visits")}
             </CardTitle>
           </CardHeader>
-          <CardContent className="text-3xl font-bold">{link.clickCount}</CardContent>
+          <CardContent className="text-3xl font-bold">{new Intl.NumberFormat(locale).format(link.clickCount)}</CardContent>
         </Card>
         <Card className="sm:col-span-2">
           <CardHeader className="pb-2">

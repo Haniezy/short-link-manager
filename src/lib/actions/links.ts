@@ -1,5 +1,6 @@
 "use server";
 
+import { getTranslations } from "next-intl/server";
 import { updateTag } from "next/cache";
 import { auth } from "@/lib/auth";
 import {
@@ -33,10 +34,11 @@ export async function createLinkAction(input: {
   slug?: string;
   title?: string;
 }): Promise<ActionResult<LinkWithClicks>> {
-  const session = await auth.getSession();
+  const t = await getTranslations("validation");
+  const session = await auth.getSession().catch(() => null);
 
   if (!session) {
-    return err("You must be signed in.");
+    return err(t("session"));
   }
 
   const parsed = createLinkSchema.safeParse(input);
@@ -48,11 +50,11 @@ export async function createLinkAction(input: {
       const key = issue.path[0];
 
       if (typeof key === "string" && !fieldErrors[key]) {
-        fieldErrors[key] = issue.message;
+        fieldErrors[key] = t.has(issue.message) ? t(issue.message) : t("fixFields");
       }
     }
 
-    return err("Please fix the errors below.", fieldErrors);
+    return err(t("fixFields"), fieldErrors);
   }
 
   const {
@@ -65,30 +67,30 @@ export async function createLinkAction(input: {
     ? rawSlug.trim()
     : null;
 
-  let slug = requestedSlug;
-
-  if (!slug) {
-    for (let attempt = 0; attempt < 5; attempt += 1) {
-      const candidate = generateSlug(6);
-
-      if (!(await isSlugTaken(candidate))) {
-        slug = candidate;
-        break;
-      }
-    }
+  try {
+    let slug = requestedSlug;
 
     if (!slug) {
-      return err(
-        "Could not generate a unique slug. Please try again.",
-      );
-    }
-  } else if (await isSlugTaken(slug)) {
-    return err("That slug is already taken.", {
-      slug: "That slug is already taken. Please choose another.",
-    });
-  }
+      for (let attempt = 0; attempt < 5; attempt += 1) {
+        const candidate = generateSlug(6);
 
-  try {
+        if (!(await isSlugTaken(candidate))) {
+          slug = candidate;
+          break;
+        }
+      }
+
+      if (!slug) {
+        return err(
+          t("slugGenerate"),
+        );
+      }
+    } else if (await isSlugTaken(slug)) {
+      return err(t("slugTaken"), {
+        slug: t("slugTakenHint"),
+      });
+    }
+
     const link = await insertLink({
       userId: session.user.id,
       slug,
@@ -104,7 +106,7 @@ export async function createLinkAction(input: {
     });
   } catch {
     return err(
-      "Something went wrong creating your link. Please try again.",
+      t("createFailed"),
     );
   }
 }
@@ -115,16 +117,17 @@ export async function createLinkAction(input: {
 export async function deleteLinkAction(
   id: string,
 ): Promise<ActionResult<null>> {
-  const session = await auth.getSession();
+  const t = await getTranslations("validation");
+  const session = await auth.getSession().catch(() => null);
 
   if (!session) {
-    return err("You must be signed in.");
+    return err(t("session"));
   }
 
   const parsedId = linkIdSchema.safeParse(id);
 
   if (!parsedId.success) {
-    return err("Invalid link ID.");
+    return err(t("linkIdInvalid"));
   }
 
   try {
@@ -134,7 +137,7 @@ export async function deleteLinkAction(
     );
 
     if (!deleted) {
-      return err("Link not found.");
+      return err(t("notFound"));
     }
 
     updateTag(LINKS_TAG);
@@ -143,7 +146,7 @@ export async function deleteLinkAction(
     return ok(null);
   } catch {
     return err(
-      "Could not delete the link. Please try again.",
+      t("deleteFailed"),
     );
   }
 }
@@ -154,10 +157,11 @@ export async function deleteLinkAction(
 export async function getLinksAction(): Promise<
   ActionResult<LinkWithClicks[]>
 > {
-  const session = await auth.getSession();
+  const t = await getTranslations("validation");
+  const session = await auth.getSession().catch(() => null);
 
   if (!session) {
-    return err("You must be signed in.");
+    return err(t("session"));
   }
 
   try {
@@ -165,7 +169,7 @@ export async function getLinksAction(): Promise<
     return ok(links);
   } catch {
     return err(
-      "Could not load your links. Please try again.",
+      t("loadFailed"),
     );
   }
 }
@@ -176,16 +180,17 @@ export async function getLinksAction(): Promise<
 export async function getLinkAction(
   id: string,
 ): Promise<ActionResult<LinkWithClicks | null>> {
-  const session = await auth.getSession();
+  const t = await getTranslations("validation");
+  const session = await auth.getSession().catch(() => null);
 
   if (!session) {
-    return err("You must be signed in.");
+    return err(t("session"));
   }
 
   const parsedId = linkIdSchema.safeParse(id);
 
   if (!parsedId.success) {
-    return err("Invalid link ID.");
+    return err(t("linkIdInvalid"));
   }
 
   try {
@@ -195,13 +200,13 @@ export async function getLinkAction(
     );
 
     if (!link) {
-      return err("Link not found.");
+      return err(t("notFound"));
     }
 
     return ok(link);
   } catch {
     return err(
-      "Could not load the link. Please try again.",
+      t("loadOneFailed"),
     );
   }
 }

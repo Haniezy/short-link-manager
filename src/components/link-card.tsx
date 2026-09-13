@@ -44,7 +44,7 @@ export function LinkCard({ link }: { link: LinkWithClicks }) {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="text-xs text-muted-foreground">
           <span className="font-semibold text-foreground">
-            {link.clickCount}
+            {new Intl.NumberFormat(locale).format(link.clickCount)}
           </span>{" "}
           {t("visits")}
           <span className="mx-1.5">·</span>

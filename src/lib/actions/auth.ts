@@ -1,13 +1,15 @@
 "use server";
 
+import { getTranslations } from "next-intl/server";
 import { auth } from "@/lib/auth";
 import { credentialsSchema } from "@/lib/validation";
 import { ok, err, type ActionResult, type FieldErrors } from "@/lib/result";
 
-function validateCredentials(
+async function validateCredentials(
   email: string,
   password: string,
-): FieldErrors | null {
+): Promise<FieldErrors | null> {
+  const t = await getTranslations("validation");
   const result = credentialsSchema.safeParse({ email, password });
 
   if (result.success) return null;
@@ -16,11 +18,11 @@ function validateCredentials(
   const fieldErrors: FieldErrors = {};
 
   if (errors.email?.[0]) {
-    fieldErrors.email = errors.email[0];
+    fieldErrors.email = t(errors.email[0]);
   }
 
   if (errors.password?.[0]) {
-    fieldErrors.password = errors.password[0];
+    fieldErrors.password = t(errors.password[0]);
   }
 
   return fieldErrors;
@@ -35,10 +37,11 @@ export async function signUpAction(
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
-  const fieldErrors = validateCredentials(email, password);
+  const t = await getTranslations("validation");
+  const fieldErrors = await validateCredentials(email, password);
 
   if (fieldErrors) {
-    return err("Please fix the errors below.", fieldErrors);
+    return err(t("fixFields"), fieldErrors);
   }
 
   const { error } = await auth
@@ -47,12 +50,12 @@ export async function signUpAction(
 
   if (error) {
     if (/already exists/i.test(error)) {
-      return err("Please fix the errors below.", {
-        email: "An account with this email already exists.",
+      return err(t("fixFields"), {
+        email: t("emailExists"),
       });
     }
 
-    return err("Could not create your account. Please try again.");
+    return err(t("signupFailed"));
   }
 
   return ok({ kind: "signed-up" });
@@ -65,10 +68,11 @@ export async function signInAction(
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
-  const fieldErrors = validateCredentials(email, password);
+  const t = await getTranslations("validation");
+  const fieldErrors = await validateCredentials(email, password);
 
   if (fieldErrors) {
-    return err("Please fix the errors below.", fieldErrors);
+    return err(t("fixFields"), fieldErrors);
   }
 
   const { error } = await auth
@@ -76,7 +80,7 @@ export async function signInAction(
     .catch(() => ({ error: "unavailable" }));
 
   if (error) {
-    return err("Invalid email or password.");
+    return err(t("loginFailed"));
   }
 
   return ok({ kind: "signed-in" });
@@ -85,12 +89,13 @@ export async function signInAction(
 export async function signOutAction(): Promise<
   ActionResult<{ signedOut: true }>
 > {
+  const t = await getTranslations("validation");
   try {
     const { error } = await auth.signOut();
     return error
-      ? err("Could not sign out. Please try again.")
+      ? err(t("signoutFailed"))
       : ok({ signedOut: true });
   } catch {
-    return err("Could not sign out. Please try again.");
+    return err(t("signoutFailed"));
   }
 }

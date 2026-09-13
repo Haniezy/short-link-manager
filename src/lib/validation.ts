@@ -10,9 +10,9 @@ export const createLinkSchema = z.object({
   destinationUrl: z
     .string()
     .trim()
-    .url("Enter a valid URL.")
+    .url("urlInvalid")
     .refine((value) => /^https?:\/\//i.test(value), {
-      message: "URL must start with http:// or https://",
+      message: "urlProtocol",
     }),
 
   slug: z
@@ -20,17 +20,17 @@ export const createLinkSchema = z.object({
     .trim()
     .regex(
       /^[a-zA-Z0-9-]+$/,
-      "Slug may only contain letters, numbers, and dashes.",
+      "slugCharacters",
     )
-    .min(3, "Slug must be at least 3 characters.")
-    .max(32, "Slug must be at most 32 characters.")
+    .min(3, "slugShort")
+    .max(32, "slugLong")
     .optional()
     .or(z.literal("")),
 
   title: z
     .string()
     .trim()
-    .max(120, "Title must be at most 120 characters.")
+    .max(120, "titleLong")
     .optional()
     .or(z.literal("")),
 });
@@ -39,15 +39,16 @@ export const credentialsSchema = z.object({
   email: z
     .string()
     .trim()
-    .email("Enter a valid email address."),
+    .min(1, "emailRequired")
+    .email("emailInvalid"),
 
   password: z
     .string()
-    .min(8, "Password must be at least 8 characters."),
+    .min(8, "passwordShort"),
 });
 
 export const linkIdSchema = z
   .string()
-  .uuid("Invalid link ID.");
+  .uuid("linkIdInvalid");
 
 export type CreateLinkInput = z.infer<typeof createLinkSchema>;

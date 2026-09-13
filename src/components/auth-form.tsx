@@ -17,7 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
-import { z } from "zod";
+import { credentialsSchema } from "@/lib/validation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { type ActionResult, type FieldErrors } from "@/lib/result";
@@ -27,34 +27,6 @@ import {
   type AuthSuccess,
 } from "@/lib/actions/auth";
 import { useTranslations } from "next-intl";
-
-// Client-side validation schemas. These mirror the server rules in
-// lib/actions/auth.ts so users get immediate feedback before a network
-// round-trip; the server still re-validates as the source of truth.
-const credentialsSchema = z.object({
-  email: z
-    .string()
-    .trim()
-    .min(1, "Email is required.")
-    .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Enter a valid email address."),
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters."),
-});
-
-function validateCredentialsClient(
-  email: string,
-  password: string,
-): FieldErrors {
-  const result = credentialsSchema.safeParse({ email, password });
-  if (result.success) return {};
-  const fe: FieldErrors = {};
-  for (const issue of result.error.issues) {
-    const key = issue.path[0];
-    if (typeof key === "string" && !fe[key]) fe[key] = issue.message;
-  }
-  return fe;
-}
 
 function SubmitButton({ label }: { label: string }) {
   const { pending } = useFormStatus();
@@ -131,6 +103,7 @@ function FieldInput({
   minLength,
   required,
   trailing,
+  value,
   error,
   onValueChange,
 }: {
@@ -143,6 +116,7 @@ function FieldInput({
   minLength?: number;
   required?: boolean;
   trailing?: React.ReactNode;
+  value: string;
   error?: string;
   onValueChange?: (value: string) => void;
 }) {
@@ -177,6 +151,8 @@ function FieldInput({
             id={id}
             name={name}
             type={type}
+            value={value}
+            aria-label={label}
             autoComplete={autoComplete}
             minLength={minLength}
             required={required}
@@ -192,7 +168,7 @@ function FieldInput({
                 .closest(".group\\/field")
                 ?.removeAttribute("data-focused");
             }}
-            onInput={(e) => {
+            onChange={(e) => {
               const v = (e.target as HTMLInputElement).value;
               e.currentTarget
                 .closest(".group\\/field")
@@ -225,7 +201,7 @@ function PasswordStrength({ password }: { password: string }) {
     if (/[A-Z]/.test(password)) s++;
     if (/[0-9]/.test(password)) s++;
     if (/[^A-Za-z0-9]/.test(password)) s++;
-    return Math.min(s, 4);
+    return Math.max(1, Math.min(s, 4));
   }, [password]);
 
   if (!password) return null;
@@ -293,6 +269,7 @@ function PasswordField({
         label={t("password")}
         icon={Lock}
         autoComplete={autoComplete}
+        value={value}
         error={error}
         onValueChange={handleChange}
         trailing={
@@ -306,7 +283,6 @@ function PasswordField({
             <button
               type="button"
               onClick={() => setShow((s) => !s)}
-              tabIndex={-1}
               aria-label={show ? t("hidePassword") : t("showPassword")}
               className="grid size-7 place-items-center rounded-md text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground active:scale-95"
             >
@@ -327,6 +303,8 @@ function PasswordField({
 export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const t = useTranslations("auth");
   const router = useRouter();
+  const validation = useTranslations("validation");
+  const [email, setEmail] = React.useState("");
   const action = mode === "login" ? signInAction : signUpAction;
   const [state, formAction] = useActionState<ActionResult<AuthSuccess>, FormData>(
     action,
@@ -388,12 +366,12 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   // When the server returns both a top-level message and field errors (e.g.
   // "Please fix the errors below."), we still want a toast so users know the
   // submit failed — the inline field messages alone can be easy to miss.
-  const lastHandledError = React.useRef<string | null>(null);
+  const lastHandledError = React.useRef<typeof state | null>(null);
   React.useEffect(() => {
     if (state.data) return;
     if (!state.error) return;
-    if (lastHandledError.current === state.error) return;
-    lastHandledError.current = state.error;
+    if (lastHandledError.current === state) return;
+    lastHandledError.current = state;
     toast.error(state.error);
   }, [state]);
 
@@ -404,7 +382,9 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   // attach it to the password field since that's the most actionable one
   // for an auth failure.
   const formLevelError =
-    Object.keys(serverFieldErrors).length === 0 && state.error
+    clearedFields.size === 0 &&
+    Object.keys(serverFieldErrors).length === 0 &&
+    state.error
       ? state.error
       : undefined;
 
@@ -429,7 +409,18 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
     const email = String(formData.get("email") ?? "").trim();
     const password = String(formData.get("password") ?? "");
 
-    const fe = validateCredentialsClient(email, password);
+    const parsed = credentialsSchema.safeParse({ email, password });
+    const fe: FieldErrors = {};
+    if (!parsed.success) {
+      for (const issue of parsed.error.issues) {
+        const key = String(issue.path[0]);
+        if (!fe[key]) {
+          fe[key] = validation.has(issue.message)
+            ? validation(issue.message)
+            : validation("fixFields");
+        }
+      }
+    }
     if (Object.keys(fe).length > 0) {
       setClientErrors(fe);
       // Reset cleared-fields mask so any server errors are also re-shown if
@@ -463,8 +454,12 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
         label={t("emailPlaceholder")}
         icon={Mail}
         autoComplete="email"
+        value={email}
         error={visibleMergedError("email")}
-        onValueChange={() => handleEdit("email")}
+        onValueChange={(value) => {
+          setEmail(value);
+          handleEdit("email");
+        }}
       />
 
       <PasswordField
