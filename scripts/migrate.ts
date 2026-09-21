@@ -1,7 +1,7 @@
 import { config } from "dotenv";
-import { drizzle } from "drizzle-orm/neon-http";
-import { migrate } from "drizzle-orm/neon-http/migrator";
-import { neon } from "@neondatabase/serverless";
+import { Pool } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-serverless";
+import { migrate } from "drizzle-orm/neon-serverless/migrator";
 
 config({ path: ".env.local" });
 
@@ -12,10 +12,12 @@ async function main(): Promise<void> {
     throw new Error("Environment variable DATABASE_URL is missing.");
   }
 
-  const sql = neon(connectionString);
-  const database = drizzle(sql);
+  const pool = new Pool({ connectionString });
+  const database = drizzle(pool);
 
   await migrate(database, { migrationsFolder: "./drizzle" });
+
+  await pool.end();
 
   console.log("Migrations applied successfully.");
   process.exit(0);
