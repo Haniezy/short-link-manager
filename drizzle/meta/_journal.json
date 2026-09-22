@@ -15,6 +15,13 @@
       "when": 1789972170302,
       "tag": "0001_worthless_purifiers",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789981759253,
+      "tag": "0002_neon_auth_backend",
+      "breakpoints": true
     }
   ]
 }

@@ -1,118 +1,44 @@
 "use server";
-
-import { eq } from "drizzle-orm";
-import { z } from "zod";
-
-import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
-import { hashPassword, verifyPassword } from "@/lib/auth/password";
-import {
-  createSession,
-  destroySession,
-} from "@/lib/auth/session";
-
+import { revalidatePath } from "next/cache";
+import { getAuth } from "@/lib/auth/server";
+import { loginSchema, registerSchema, validationError } from "@/lib/validation";
 import type { ActionResult } from "./types";
 
-const registerSchema = z.object({
-  email: z.email("Enter a valid email address."),
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters long.")
-    .max(128, "Password must be at most 128 characters long."),
-});
+type AuthData = { email: string; requiresEmailVerification: boolean };
 
-const loginSchema = z.object({
-  email: z.email("Enter a valid email address."),
-  password: z.string().min(1, "Password is required."),
-});
-
-function firstIssue(error: z.ZodError): string {
-  const issue = error.issues[0];
-  return issue ? issue.message : "Invalid input.";
-}
-
-export type RegisterInput = z.infer<typeof registerSchema>;
-
-export async function registerAction(
-  input: RegisterInput,
-): Promise<ActionResult<{ email: string }>> {
+export async function registerAction(input: unknown): Promise<ActionResult<AuthData>> {
   const parsed = registerSchema.safeParse(input);
-
-  if (!parsed.success) {
-    return { data: null, error: firstIssue(parsed.error) };
-  }
-
-  const { email, password } = parsed.data;
-
+  if (!parsed.success) return validationError(parsed.error);
   try {
-    const existing = await db
-      .select({ id: users.id })
-      .from(users)
-      .where(eq(users.email, email))
-      .limit(1);
-
-    if (existing.length > 0) {
-      return { data: null, error: "An account with this email already exists." };
-    }
-
-    const passwordHash = await hashPassword(password);
-
-    const [user] = await db
-      .insert(users)
-      .values({ email, passwordHash })
-      .returning();
-
-    await createSession(user.id);
-
-    return { data: { email: user.email }, error: null };
+    const { data, error } = await getAuth().signUp.email({
+      ...parsed.data, name: parsed.data.email.split("@")[0],
+    });
+    if (error || !data) return { data: null, error: "Could not create an account. Try signing in or use another email." };
+    revalidatePath("/dashboard", "layout");
+    return { data: { email: data.user.email, requiresEmailVerification: !data.token }, error: null };
   } catch {
-    return {
-      data: null,
-      error: "Something went wrong. Please try again.",
-    };
+    return { data: null, error: "Sign up is temporarily unavailable. Please try again." };
   }
 }
-
-export type LoginInput = z.infer<typeof loginSchema>;
-
-export async function loginAction(
-  input: LoginInput,
-): Promise<ActionResult<{ email: string }>> {
+export async function loginAction(input: unknown): Promise<ActionResult<AuthData>> {
   const parsed = loginSchema.safeParse(input);
-
-  if (!parsed.success) {
-    return { data: null, error: firstIssue(parsed.error) };
-  }
-
-  const { email, password } = parsed.data;
-
+  if (!parsed.success) return validationError(parsed.error);
   try {
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, email))
-      .limit(1);
-
-    if (!user || !(await verifyPassword(password, user.passwordHash))) {
-      return { data: null, error: "Invalid email or password." };
-    }
-
-    await createSession(user.id);
-
-    return { data: { email: user.email }, error: null };
+    const { data, error } = await getAuth().signIn.email(parsed.data);
+    if (error || !data) return { data: null, error: "Could not sign in. Check your email, password and email verification." };
+    revalidatePath("/dashboard", "layout");
+    return { data: { email: data.user.email, requiresEmailVerification: false }, error: null };
   } catch {
-    return {
-      data: null,
-      error: "Something went wrong. Please try again.",
-    };
+    return { data: null, error: "Sign in is temporarily unavailable. Please try again." };
   }
 }
-
 export async function logoutAction(): Promise<ActionResult<null>> {
   try {
-    await destroySession();
+    const { error } = await getAuth().signOut();
+    if (error) return { data: null, error: "Could not sign out. Please try again." };
+    revalidatePath("/dashboard", "layout");
     return { data: null, error: null };
   } catch {
-    return { data: null, error: "Something went wrong. Please try again." };
+    return { data: null, error: "Could not sign out. Please try again." };
   }
 }

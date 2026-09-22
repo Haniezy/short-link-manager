@@ -1,15 +1,7 @@
-import { randomBytes } from "node:crypto";
-
-const ALPHABET =
-  "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-
-export function generateSlug(length = 6): string {
-  const bytes = randomBytes(length);
+import { randomInt } from "node:crypto";
+const ALPHABET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+export function generateSlug(): string {
   let slug = "";
-
-  for (let i = 0; i < length; i++) {
-    slug += ALPHABET[bytes[i] % ALPHABET.length];
-  }
-
+  for (let i = 0; i < 6; i++) slug += ALPHABET[randomInt(ALPHABET.length)];
   return slug;
 }

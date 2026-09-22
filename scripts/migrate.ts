@@ -3,27 +3,19 @@ import { Pool } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { migrate } from "drizzle-orm/neon-serverless/migrator";
 
-config({ path: ".env.local" });
-
+config({ path: ".env.local", quiet: true });
 async function main(): Promise<void> {
   const connectionString = process.env.DATABASE_URL;
-
-  if (!connectionString) {
-    throw new Error("Environment variable DATABASE_URL is missing.");
+  if (!connectionString) throw new Error("Database is not configured.");
+  const pool = new Pool({ connectionString, connectionTimeoutMillis: 10_000 });
+  try {
+    await migrate(drizzle(pool), { migrationsFolder: "./drizzle" });
+    console.log("Migrations applied successfully.");
+  } finally {
+    await pool.end();
   }
-
-  const pool = new Pool({ connectionString });
-  const database = drizzle(pool);
-
-  await migrate(database, { migrationsFolder: "./drizzle" });
-
-  await pool.end();
-
-  console.log("Migrations applied successfully.");
-  process.exit(0);
 }
-
-main().catch((error: unknown) => {
-  console.error("Migration failed:", error);
-  process.exit(1);
+main().catch(() => {
+  console.error("Migration failed. Check database connectivity and the legacy-data guard in migration 0002. No credentials are logged.");
+  process.exitCode = 1;
 });

@@ -1,69 +1,56 @@
-import Image from "next/image";
+import Link from "next/link";
+import { ArrowUpRight, Link2, Copy, BarChart3, FolderHeart, MousePointer2, ShieldCheck, Check, MoveDown, Sparkles, ArrowLeft, ArrowRight } from "lucide-react";
+import { readLocale } from "@/lib/locale-server";
+import { copy } from "@/lib/locale";
+import { getCurrentUser } from "@/lib/auth/session";
+import { LandingSession, AuthButton, AccountButtons } from "@/components/landing/session";
+import { DisplayControls } from "@/components/landing/controls";
+import { Shortener } from "@/components/landing/shortener";
+import { DashboardPreview } from "@/components/landing/preview";
 
-export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+export default async function Home() {
+  const locale = await readLocale(), t = copy[locale];
+  let email: string | null = null;
+  try { email = (await getCurrentUser())?.email ?? null; } catch { /* Public landing remains available during an auth outage. */ }
+  const icons = [Link2, FolderHeart, MousePointer2, BarChart3];
+  const strengths = [Link2, Copy, BarChart3, FolderHeart];
+  return <LandingSession locale={locale} initialEmail={email}>
+    <div className="landing">
+      <a className="skip-link" href="#main">{t.skip}</a>
+      <header className="site-header"><div className="header-inner">
+        <Link href="/" className="brand" aria-label={"LinkFlow — " + t.home}><span className="brand-symbol"><Link2 size={19} /></span><span dir="ltr">Link<span>Flow</span></span></Link>
+        <nav className="header-nav" aria-label={t.product}><a href="#features">{t.features}</a><a href="#how-it-works">{t.how}</a><a href="#preview">{t.preview}</a></nav>
+        <div className="header-actions"><DisplayControls locale={locale} /><AccountButtons /></div>
+      </div></header>
+      <main id="main">
+        <section className="hero section-container">
+          <div className="eyebrow hero-eyebrow"><span className="live-dot" />{t.pill}<Sparkles size={12} /></div>
+          <h1>{t.heading}<br /><span className="gradient-text">{t.accent}</span>{t.ending && <> {t.ending}</>}</h1>
+          <p className="hero-description">{t.intro}</p>
+          <Shortener />
+          <div className="hero-buttons"><AuthButton className="purple-button hero-primary">{t.start}<ArrowUpRight size={17} /></AuthButton><a className="secondary-link" href="#preview">{t.explore}<BarChart3 size={16} /></a></div>
+          <div className="hero-reassurance"><ShieldCheck size={13} />{t.noCard}<span>·</span>{t.own}</div>
+          <div className="strengths">{t.strengths.map((text, index) => { const Icon = strengths[index]; return <div key={text}><Icon size={19} /><span>{text}</span></div>; })}</div>
+        </section>
+        <section id="preview" className="preview-section section-container" aria-label={t.preview}>
+          <DashboardPreview locale={locale} />
+          <div className="preview-caption"><span className="caption-line" /><p>{t.previewText}</p><span className="caption-line" /></div>
+        </section>
+        <section id="features" className="features-section section-container">
+          <div className="section-heading"><span className="eyebrow">{t.featureEyebrow}</span><h2>{t.featureTitle}</h2><p>{t.featureIntro}</p></div>
+          <div className="feature-grid">{t.featureCards.map((feature, index) => { const Icon = icons[index]; return <article className="feature-card" key={feature.title}><span className={"feature-icon feature-icon-" + index}><Icon size={23} /></span><h3>{feature.title}</h3><p>{feature.text}</p><span className="feature-tag">{feature.tag}{locale === "fa" ? <ArrowLeft size={12} /> : <ArrowRight size={12} />}</span></article>; })}</div>
+        </section>
+        <section className="comparison-section section-container">
+          <div className="comparison-copy"><span className="eyebrow">{t.comparisonTag}</span><h2>{t.comparisonTitle}</h2><p>{t.comparisonFoot}</p><div className="comparison-mini-icons" aria-hidden="true"><span><Link2 /></span><span><Copy /></span><span><Check /></span></div></div>
+          <div className="comparison-demo"><div className="before-link"><span>{t.before}</span><code dir="ltr">https://example.com/articles/your-next-big-idea?utm_source=social&amp;utm_campaign=launch</code></div><div className="comparison-arrow"><MoveDown size={20} /></div><div className="after-link"><span>{t.after}</span><div dir="ltr"><Link2 size={17} /><code>linkflow / your-idea</code><Check size={17} /></div></div><span className="comparison-sample">{t.sample}</span></div>
+        </section>
+        <section id="how-it-works" className="steps-section section-container">
+          <div className="section-heading"><span className="eyebrow">{t.stepsEyebrow}</span><h2>{t.stepsTitle}</h2></div>
+          <div className="steps-grid">{t.steps.map((step, index) => <article className="step-card" key={step.title}><span className={"step-number step-number-" + index}>{new Intl.NumberFormat(locale === "fa" ? "fa-IR" : "en-US").format(index + 1)}</span><h3>{step.title}</h3><p>{step.text}</p></article>)}</div>
+        </section>
+        <section className="cta-section section-container"><div className="cta-panel"><div className="cta-orbit cta-orbit-one" aria-hidden="true" /><div className="cta-orbit cta-orbit-two" aria-hidden="true" /><span className="cta-eyebrow"><Sparkles size={12} />{t.ctaTag}</span><h2>{t.ctaTitle}</h2><p>{t.ctaText}</p><AuthButton className="cta-button">{t.cta}<ArrowUpRight size={17} /></AuthButton><div className="cta-checks"><span><Check size={13} />{t.noCard}</span><span><Check size={13} />{t.easy}</span></div></div></section>
       </main>
+      <footer className="site-footer"><div className="section-container footer-top"><div className="footer-brand"><Link href="/" className="brand"><span className="brand-symbol"><Link2 size={19} /></span><span dir="ltr">Link<span>Flow</span></span></Link><p>{t.footerText}</p></div><div className="footer-column"><strong>{t.product}</strong><a href="#features">{t.features}</a><a href="#preview">{t.preview}</a><a href="#how-it-works">{t.how}</a></div><div className="footer-column"><strong>{t.access}</strong><AuthButton mode="login" className="footer-auth">{t.login}</AuthButton><AuthButton className="footer-auth">{t.signup}</AuthButton></div><div className="footer-message"><Link2 size={28} /><p>{t.footerNote}</p></div></div><div className="section-container footer-bottom"><span>{t.rights}</span><DisplayControls locale={locale} /></div></footer>
     </div>
-  );
+  </LandingSession>;
 }

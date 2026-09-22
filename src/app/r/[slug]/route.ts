@@ -1,44 +1,20 @@
-import { eq, sql } from "drizzle-orm";
-import { notFound } from "next/navigation";
 import { NextResponse } from "next/server";
-
-import { db } from "@/lib/db";
-import { clicks, links } from "@/lib/db/schema";
+import { resolveLink } from "@/lib/db/queries";
+import { httpError } from "@/lib/http-error";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+type RouteContext = { params: Promise<{ slug: string }> };
 
-type RouteContext = {
-  params: Promise<{ slug: string }>;
-};
-
-export async function GET(
-  _request: Request,
-  context: RouteContext,
-): Promise<NextResponse> {
-  const { slug } = await context.params;
-
-  const destinationUrl = await db.transaction(async (tx) => {
-    const [link] = await tx
-      .update(links)
-      .set({ clicks: sql`${links.clicks} + 1` })
-      .where(eq(links.slug, slug))
-      .returning({
-        id: links.id,
-        destinationUrl: links.destinationUrl,
-      });
-
-    if (!link) {
-      return null;
-    }
-
-    await tx.insert(clicks).values({ linkId: link.id });
-
-    return link.destinationUrl;
-  });
-
-  if (!destinationUrl) {
-    notFound();
+async function respond(context: RouteContext, head: boolean): Promise<Response> {
+  try {
+    const { slug } = await context.params;
+    const destination = await resolveLink(slug, !head);
+    if (!destination) return httpError(404, head);
+    return NextResponse.redirect(destination, { status: 307, headers: { "Cache-Control": "no-store" } });
+  } catch {
+    return httpError(503, head);
   }
-
-  return NextResponse.redirect(destinationUrl, 307);
 }
+export async function GET(_request: Request, context: RouteContext) { return respond(context, false); }
+export async function HEAD(_request: Request, context: RouteContext) { return respond(context, true); }
