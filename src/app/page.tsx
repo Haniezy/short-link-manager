@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { ArrowUpRight, Link2, Copy, BarChart3, FolderHeart, MousePointer2, ShieldCheck, Check, MoveDown, Sparkles, ArrowLeft, ArrowRight } from "lucide-react";
 import { readLocale } from "@/lib/locale-server";
 import { copy } from "@/lib/locale";
@@ -15,10 +14,10 @@ export default async function Home() {
   const icons = [Link2, FolderHeart, MousePointer2, BarChart3];
   const strengths = [Link2, Copy, BarChart3, FolderHeart];
   return <LandingSession locale={locale} initialEmail={email}>
-    <div className="landing">
+    <div id="top" className="landing">
       <a className="skip-link" href="#main">{t.skip}</a>
       <header className="site-header"><div className="header-inner">
-        <Link href="/" className="brand" aria-label={"LinkFlow — " + t.home}><span className="brand-symbol"><Link2 size={19} /></span><span dir="ltr">Link<span>Flow</span></span></Link>
+        <a href="#top" className="brand" aria-label={"LinkFlow — " + t.home}><span className="brand-symbol"><Link2 size={19} /></span><span dir="ltr">Link<span>Flow</span></span></a>
         <nav className="header-nav" aria-label={t.product}><a href="#features">{t.features}</a><a href="#how-it-works">{t.how}</a><a href="#preview">{t.preview}</a></nav>
         <div className="header-actions"><DisplayControls locale={locale} /><AccountButtons /></div>
       </div></header>
@@ -50,7 +49,7 @@ export default async function Home() {
         </section>
         <section className="cta-section section-container"><div className="cta-panel"><div className="cta-orbit cta-orbit-one" aria-hidden="true" /><div className="cta-orbit cta-orbit-two" aria-hidden="true" /><span className="cta-eyebrow"><Sparkles size={12} />{t.ctaTag}</span><h2>{t.ctaTitle}</h2><p>{t.ctaText}</p><AuthButton className="cta-button">{t.cta}<ArrowUpRight size={17} /></AuthButton><div className="cta-checks"><span><Check size={13} />{t.noCard}</span><span><Check size={13} />{t.easy}</span></div></div></section>
       </main>
-      <footer className="site-footer"><div className="section-container footer-top"><div className="footer-brand"><Link href="/" className="brand"><span className="brand-symbol"><Link2 size={19} /></span><span dir="ltr">Link<span>Flow</span></span></Link><p>{t.footerText}</p></div><div className="footer-column"><strong>{t.product}</strong><a href="#features">{t.features}</a><a href="#preview">{t.preview}</a><a href="#how-it-works">{t.how}</a></div><div className="footer-column"><strong>{t.access}</strong><AuthButton mode="login" className="footer-auth">{t.login}</AuthButton><AuthButton className="footer-auth">{t.signup}</AuthButton></div><div className="footer-message"><Link2 size={28} /><p>{t.footerNote}</p></div></div><div className="section-container footer-bottom"><span>{t.rights}</span><DisplayControls locale={locale} /></div></footer>
+      <footer className="site-footer"><div className="section-container footer-top"><div className="footer-brand"><a href="#top" className="brand"><span className="brand-symbol"><Link2 size={19} /></span><span dir="ltr">Link<span>Flow</span></span></a><p>{t.footerText}</p></div><div className="footer-column"><strong>{t.product}</strong><a href="#features">{t.features}</a><a href="#preview">{t.preview}</a><a href="#how-it-works">{t.how}</a></div><div className="footer-column"><strong>{t.access}</strong><AuthButton mode="login" className="footer-auth">{t.login}</AuthButton><AuthButton className="footer-auth">{t.signup}</AuthButton></div><div className="footer-message"><Link2 size={28} /><p>{t.footerNote}</p></div></div><div className="section-container footer-bottom"><span>{t.rights}</span><DisplayControls locale={locale} /></div></footer>
     </div>
   </LandingSession>;
 }
