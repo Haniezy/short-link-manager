@@ -31,6 +31,27 @@ pnpm dev
 
 Open http://localhost:3000. Never commit .env.local.
 
+### Local development with PGlite
+
+To use embedded PostgreSQL locally, set these values in `.env.local`:
+
+```dotenv
+DATABASE_DRIVER=pglite
+PGLITE_DATA_DIR=./.pglite
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+Run `pnpm db:migrate` before `pnpm dev`. Next.js runs the frontend and backend together;
+PGlite runs inside that process, so no separate database server is needed. Data persists in
+the ignored `.pglite/` directory. Stop the dev server before running further migrations,
+and use only one process against that directory at a time. `db:push` targets Neon only.
+
+PGlite replaces the application database, not Neon Auth: set `NEON_AUTH_BASE_URL` and
+`NEON_AUTH_COOKIE_SECRET` as described below for working sign-up/login. Without them,
+the public landing and auth forms can be previewed, but authentication cannot succeed.
+For Vercel, use `DATABASE_DRIVER=neon` and a real `DATABASE_URL`; PGlite is rejected in
+production. The dashboard and chart are still pending as described in Current status.
+
 | Variable | Where to get it / purpose |
 | --- | --- |
 | DATABASE_URL | Neon Console → selected project and branch → Connect, pooled Postgres URL |
