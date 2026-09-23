@@ -1,7 +1,7 @@
 import "server-only";
 import { getCurrentUser } from "@/lib/auth/session";
-import { getClicksByDay, getLinkForUser, getLinksForUser } from "@/lib/db/queries";
-import { linkIdSchema } from "@/lib/validation";
+import { getDashboardForUser, getClicksByDay, getLinkForUser, getLinksForUser } from "@/lib/db/queries";
+import { dashboardPageSchema, linkIdSchema } from "@/lib/validation";
 import type { ActionResult } from "@/actions/types";
 import type { Link } from "@/lib/db/schema";
 import type { ClickCountByDay } from "@/lib/db/queries";
@@ -30,4 +30,14 @@ export async function loadLinkDetails(id: unknown): Promise<ActionResult<{
   } catch {
     return { data: null, error: "Could not load this link. Please try again." };
   }
+}
+
+export async function loadDashboardPage(input: unknown = "1") {
+  const parsed = dashboardPageSchema.safeParse(input);
+  if (!parsed.success) return { data: null, error: "Invalid page." };
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { data: null, error: "You must be signed in to view your links." };
+    return { data: await getDashboardForUser(user.id, parsed.data), error: null };
+  } catch { return { data: null, error: "Could not load your links. Please try again." }; }
 }

@@ -72,3 +72,13 @@ export async function getClicksByDay(linkId: string, userId: string): Promise<Cl
     return { day: key, count: counts.get(key) ?? 0 };
   });
 }
+
+export async function getDashboardForUser(userId: string, requestedPage: number) {
+  userIdSchema.parse(userId);
+  const [totals] = await db.select({ total: sql<number>`count(*)::int`, totalClicks: sql<number>`coalesce(sum(${links.clicks}), 0)::float8` }).from(links).where(eq(links.userId, userId));
+  const pageSize = 12;
+  const pages = Math.max(1, Math.ceil(totals.total / pageSize));
+  const page = Math.min(requestedPage, pages);
+  const items = await db.select().from(links).where(eq(links.userId, userId)).orderBy(desc(links.createdAt), desc(links.id)).limit(pageSize).offset((page - 1) * pageSize);
+  return { links: items, total: totals.total, totalClicks: totals.totalClicks, page, pages };
+}

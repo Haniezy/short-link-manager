@@ -40,3 +40,5 @@ export function validationError(error: z.ZodError) {
   }
   return { data: null, error: error.issues[0]?.message ?? "Invalid input.", fieldErrors };
 }
+
+export const dashboardPageSchema = z.coerce.number().int().min(1).max(1000000);

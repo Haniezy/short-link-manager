@@ -1,0 +1,8 @@
+"use client";
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import type { Locale } from "@/lib/locale";
+import type { ClickCountByDay } from "@/lib/db/queries";
+export function ClickChart({ days, locale }: { days: ClickCountByDay[]; locale: Locale }) {
+  const fa = locale === "fa", date = new Intl.DateTimeFormat(fa ? "fa-IR" : "en-US", { weekday: "short", timeZone: "UTC" });
+  return <div className="click-chart" dir="ltr"><ResponsiveContainer width="100%" height={250} minWidth={0}><AreaChart data={days} margin={{ top: 15, right: 15, bottom: 10, left: 0 }} accessibilityLayer><defs><linearGradient id="clicks-area" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#9279ef" stopOpacity={0.35} /><stop offset="100%" stopColor="#9279ef" stopOpacity={0} /></linearGradient></defs><CartesianGrid stroke="var(--border)" strokeDasharray="3 6" vertical={false} /><XAxis dataKey="day" tickFormatter={value => date.format(new Date(`${value}T00:00:00Z`))} tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} axisLine={false} tickLine={false} /><YAxis allowDecimals={false} tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} width={35} axisLine={false} tickLine={false} /><Tooltip contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 12, color: "var(--foreground)" }} /><Area type="monotone" dataKey="count" name={fa ? "کلیک" : "Clicks"} stroke="#9279ef" strokeWidth={3} fill="url(#clicks-area)" isAnimationActive={false} /></AreaChart></ResponsiveContainer><p>{fa ? "۷ روز اخیر بر اساس UTC؛ روزهای بدون کلیک با صفر نمایش داده می‌شوند." : "Last 7 days in UTC. Days without clicks are shown as zero."}</p></div>;
+}

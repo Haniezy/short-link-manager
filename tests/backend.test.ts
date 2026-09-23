@@ -13,7 +13,7 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 import { createLinkAction, deleteLinkAction } from "../src/actions/links";
 import { getClicksByDay, getLinkForUser, getLinksForUser, resolveLink } from "../src/lib/db/queries";
 import { GET, HEAD } from "../src/app/r/[slug]/route";
-import { loadDashboard, loadLinkDetails } from "../src/lib/links";
+import { loadDashboardPage, loadDashboard, loadLinkDetails } from "../src/lib/links";
 import * as slugModule from "../src/lib/slug";
 
 const alice = { id: "neon-alice", email: "alice@example.com" };
@@ -195,5 +195,23 @@ describe("redirect and analytics", () => {
       expect(rows[6].count).toBe(1);
       expect(rows.slice(1, 6).every((day) => day.count === 0)).toBe(true);
     } finally { await db.execute(sql`SET TIME ZONE 'UTC'`); }
+  });
+});
+
+describe("dashboard pagination", () => {
+  it("keeps summary and page contents scoped to the signed-in user", async () => {
+    await db.insert(links).values(Array.from({ length: 14 }, (_, i) => ({ userId: alice.id, slug: `alice-${i}`, destinationUrl: "https://example.com", clicks: i })));
+    await db.insert(links).values({ userId: bob.id, slug: "bob-link", destinationUrl: "https://example.com", clicks: 999 });
+    const first = await loadDashboardPage("1"), second = await loadDashboardPage("2");
+    expect(first.data?.links).toHaveLength(12);
+    expect(second.data?.links).toHaveLength(2);
+    expect(first.data?.total).toBe(14);
+    expect(first.data?.totalClicks).toBe(91);
+    const ids = [...(first.data?.links ?? []), ...(second.data?.links ?? [])].map(link => link.id);
+    expect(new Set(ids).size).toBe(14);
+    expect((await loadDashboardPage("99")).data?.page).toBe(2);
+    expect((await loadDashboardPage("0")).error).toBeTruthy();
+    session.getCurrentUser.mockResolvedValue(null);
+    expect((await loadDashboardPage()).data).toBeNull();
   });
 });

@@ -79,7 +79,7 @@ export function AuthForm({ mode, locale, notice }: { mode: "login" | "signup"; l
       }
       if (result.data.requiresEmailVerification) { setMessage(t.verify); toast.info(t.verify); return; }
       toast.success(signup ? (fa ? "حساب شما با موفقیت ساخته شد." : "Your account was created successfully.") : (fa ? "با موفقیت وارد شدید." : "You signed in successfully."));
-      router.replace("/"); router.refresh();
+      router.replace("/dashboard"); router.refresh();
     } catch { fail(t.failed); }
     finally { setPending(false); }
   }
