@@ -17,7 +17,7 @@ export const createLinkSchema = z.object({
     .optional().transform((value) => value || null),
 });
 export const deleteLinkSchema = z.object({ id: linkIdSchema });
-const emailSchema = z.string().trim().toLowerCase().pipe(z.email("Enter a valid email address."));
+const emailSchema = z.string().trim().toLowerCase().max(254, "Email is too long.").pipe(z.email("Enter a valid email address."));
 export const registerSchema = z.object({
   email: emailSchema,
   password: z.string().min(8, "Password must be at least 8 characters.")
@@ -26,6 +26,11 @@ export const registerSchema = z.object({
 export const loginSchema = z.object({
   email: emailSchema,
   password: z.string().min(1, "Password is required.").max(128, "Password is too long."),
+});
+export const registerFormSchema = registerSchema.extend({
+  confirmPassword: z.string().min(1, "Please re-enter your password.").max(128, "Password must be at most 128 characters."),
+}).refine((value) => value.password === value.confirmPassword, {
+  path: ["confirmPassword"], message: "Your passwords do not match.",
 });
 export function validationError(error: z.ZodError) {
   const fieldErrors: Record<string, string[]> = {};

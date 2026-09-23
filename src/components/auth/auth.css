@@ -31,3 +31,8 @@
 @media(min-width:900px) { .auth-page-content { padding-top:48px; }.auth-page-heading {margin-top:66px;} }
 @media(max-width:480px) { .auth-page-content {width:calc(100% - 44px); padding-top:28px;}.auth-page::before {width:135%;height:590px;top:-245px;inset-inline-start:-30%;border-radius:0 0 80% 42%;}.auth-page-heading {margin-top:60px;margin-bottom:36px;}.auth-page-signup .auth-page-heading {margin-top:40px;}.auth-wordmark {font-size:36px;}.auth-page-heading h1 {font-size:25px;}.auth-page-form {gap:25px;} }
 @media(prefers-reduced-motion:reduce) { .auth-page * {transition:none!important;} }
+
+.auth-field-error { margin-top:7px; font-size:12px; line-height:1.7; color:#b42335; }
+.auth-line-field input[aria-invalid="true"] { border-color:#d33c50; box-shadow:0 1px 0 #d33c50; }
+.dark .auth-field-error { color:#ff9ba8; }
+.dark .auth-line-field input[aria-invalid="true"] { border-color:#ff8495; box-shadow:0 1px 0 #ff8495; }

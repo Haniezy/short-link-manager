@@ -9,7 +9,7 @@ import { registerAction, loginAction, logoutAction } from "../src/actions/auth";
 beforeEach(() => { vi.resetAllMocks(); });
 it("normalizes email and delegates password auth to Neon", async () => {
   auth.signUp.email.mockResolvedValue({ data: { user: { email: "user@example.com" }, token: "token" }, error: null });
-  const result = await registerAction({ email: " USER@example.com ", password: "long-password" });
+  const result = await registerAction({ email: " USER@example.com ", password: "long-password", confirmPassword: "long-password" });
   expect(auth.signUp.email).toHaveBeenCalledWith({
     email: "user@example.com", password: "long-password", name: "user",
   });
@@ -17,7 +17,7 @@ it("normalizes email and delegates password auth to Neon", async () => {
 });
 it("reports required email verification instead of claiming a session", async () => {
   auth.signUp.email.mockResolvedValue({ data: { user: { email: "user@example.com" }, token: null }, error: null });
-  expect((await registerAction({ email: "user@example.com", password: "long-password" })).data?.requiresEmailVerification).toBe(true);
+  expect((await registerAction({ email: "user@example.com", password: "long-password", confirmPassword: "long-password" })).data?.requiresEmailVerification).toBe(true);
 });
 it("validates both auth forms before contacting the provider", async () => {
   expect((await registerAction({ email: "invalid", password: "short" })).fieldErrors).toBeDefined();
@@ -36,4 +36,13 @@ it("does not claim logout succeeded when Neon rejected it", async () => {
   expect((await logoutAction()).error).toBeTruthy();
   auth.signOut.mockResolvedValue({ error: null });
   expect(await logoutAction()).toEqual({ data: null, error: null });
+});
+
+it("rejects missing or mismatched password confirmation before contacting Neon", async () => {
+  for (const confirmPassword of [undefined, "different-password"]) {
+    const result = await registerAction({ email: "user@example.com", password: "long-password", confirmPassword });
+    expect(result.fieldErrors?.confirmPassword).toBeDefined();
+    expect(result.data).toBeNull();
+  }
+  expect(auth.signUp.email).not.toHaveBeenCalled();
 });

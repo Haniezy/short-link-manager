@@ -11,7 +11,9 @@ sample dashboard, and a short-link form connected to the backend for authenticat
 The /login and /signup pages follow the supplied curved-background design, with shared glass
 buttons, Persian/English content, theme support, and email/password Server Actions. Successful
 authentication returns to the landing page while the dashboard UI is pending. Password confirmation
-and basic safe feedback are included; detailed auth error UX is a separate follow-up.
+is validated with Zod on the client and server. Localized errors appear below each input,
+and Sonner toasts report authentication success, failure, and email verification requirements.
+Unauthenticated dashboard visits redirect to login with an access-required toast.
 Root and auth route loading/error boundaries are included. The dashboard list/forms, delete
 confirmation, and the real link detail chart still need to be built after their designs are approved.
 
@@ -95,6 +97,8 @@ The application never stores passwords or implements its own session tokens.
 ## Backend interfaces
 
 - src/actions/auth.ts: registerAction, loginAction, logoutAction, backed by the official Neon Auth SDK.
+  Registration accepts email, password and confirmPassword; confirmation is checked on the server
+  and is never forwarded to Neon.
 - src/actions/links.ts: createLinkAction and deleteLinkAction. All mutations initiated by forms use Server Actions.
 - src/lib/links.ts: loadDashboard and loadLinkDetails, server-only read services returning safe results.
 - src/lib/db/: schema and all application database operations. React components should call the services.

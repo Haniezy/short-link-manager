@@ -1,17 +1,17 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { getAuth } from "@/lib/auth/server";
-import { loginSchema, registerSchema, validationError } from "@/lib/validation";
+import { loginSchema, registerFormSchema, validationError } from "@/lib/validation";
 import type { ActionResult } from "./types";
 
 type AuthData = { email: string; requiresEmailVerification: boolean };
 
 export async function registerAction(input: unknown): Promise<ActionResult<AuthData>> {
-  const parsed = registerSchema.safeParse(input);
+  const parsed = registerFormSchema.safeParse(input);
   if (!parsed.success) return validationError(parsed.error);
   try {
     const { data, error } = await getAuth().signUp.email({
-      ...parsed.data, name: parsed.data.email.split("@")[0],
+      email: parsed.data.email, password: parsed.data.password, name: parsed.data.email.split("@")[0],
     });
     if (error || !data) return { data: null, error: "Could not create an account. Try signing in or use another email." };
     revalidatePath("/dashboard", "layout");

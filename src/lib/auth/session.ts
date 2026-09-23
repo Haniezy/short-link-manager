@@ -11,7 +11,9 @@ export const getCurrentUser = cache(async () => {
 });
 
 export async function requireUser() {
-  const user = await getCurrentUser();
-  if (!user) redirect("/login");
+  let user;
+  try { user = await getCurrentUser(); }
+  catch { redirect("/login?notice=unavailable"); }
+  if (!user) redirect("/login?notice=required");
   return user;
 }
