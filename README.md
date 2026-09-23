@@ -5,17 +5,20 @@ Package manager: pnpm 10.10.0. Tailwind CSS v4 and shadcn/ui are installed.
 
 ## Current status
 
-The backend is implemented and tested. The landing page follows the supplied visual references,
-with Persian/English content, RTL/LTR layouts, persistent light/dark themes, an explicitly labeled
-sample dashboard, and a short-link form connected to the backend for authenticated sessions.
-The /login and /signup pages follow the supplied curved-background design, with shared glass
-buttons, Persian/English content, theme support, and email/password Server Actions. Successful
-authentication returns to the landing page while the dashboard UI is pending. Password confirmation
-is validated with Zod on the client and server. Localized errors appear below each input,
-and Sonner toasts report authentication success, failure, and email verification requirements.
-Unauthenticated dashboard visits redirect to login with an access-required toast.
-Root and auth route loading/error boundaries are included. The dashboard list/forms, delete
-confirmation, and the real link detail chart still need to be built after their designs are approved.
+The backend and dashboard UI are implemented. The responsive landing, login, signup and
+shared account header support Persian/English and light/dark themes. Successful authentication
+now goes to `/dashboard`. The dashboard includes server-paginated links (12 per page), total
+link/click summaries, Zod-validated creation, clipboard copying and confirmation before deletion.
+Each owned link has a detail page with its destination, creation date, total clicks and a seven-day
+Recharts graph. Loading, error and not-found states are included. The account menu displays the
+verified email and offers explicit sign-out; a profile page is not implemented.
+
+Local UI checks used temporary fixture data to review desktop/mobile layouts, both themes,
+inline validation, delete confirmation and empty states. The temporary preview route was removed.
+Backend tests include pagination and owner-scoped totals. Local Neon Auth is configured in `.env.local`. A temporary account verified the actual
+Next.js signup/signin/signout Server Actions, wrong-password rejection and authenticated
+HTTP access to `/dashboard`; the account was deleted and cleanup verified. Full browser
+acceptance of link creation and analytics still remains. PGlite alone does not provide authentication.
 
 **Deployed URL:** not deployed yet. Vercel deployment and browser-based acceptance testing are pending.
 Do not treat this branch as a finished submission.
@@ -52,7 +55,7 @@ PGlite replaces the application database, not Neon Auth: set `NEON_AUTH_BASE_URL
 `NEON_AUTH_COOKIE_SECRET` as described below for working sign-up/login. Without them,
 the public landing and auth forms can be previewed, but authentication cannot succeed.
 For Vercel, use `DATABASE_DRIVER=neon` and a real `DATABASE_URL`; PGlite is rejected in
-production. The dashboard and chart are still pending as described in Current status.
+production. See Current status for the remaining live authentication verification.
 
 | Variable | Where to get it / purpose |
 | --- | --- |
@@ -69,7 +72,7 @@ node -e "console.log(crypto.randomBytes(32).toString('hex'))"
 
 Enable email/password sign-up and sign-in in Neon Auth. Allow localhost for development.
 The application does not require email verification for this exercise; if enabled, registration
-returns `requiresEmailVerification: true` when no session is created so the future form can show
+returns `requiresEmailVerification: true` when no session is created so the form can show
 the correct next step.
 
 At deployment, set the variables in Vercel's Environment Variables, add the deployed origin to
@@ -134,7 +137,7 @@ are validated with Zod. UI code must still handle the returned errors and pendin
   provider-managed schema. IDs are taken only from verified sessions. Account deletion is outside
   the requested product scope.
 - Route Handlers do not render React not-found/error boundaries. The redirect returns its own
-  HTML 404 or sanitized HTML 503 response. Page boundaries belong to the upcoming UI phase.
+  HTML 404 or sanitized HTML 503 response. Dashboard pages include their own loading, error and not-found boundaries.
 - The installed official Neon Auth package is a beta release. pnpm reports upstream optional UI peer
   warnings; this application imports only the server SDK. Production build and live backend checks
   passed with the locked versions.
@@ -188,3 +191,13 @@ standalone form. The panel slides in only over the landing page; switching betwe
 login and signup reuses the same panel without replaying the slide. The in-page back
 arrow or Escape slides the panel out to the right before returning home. Browser Back
 uses normal route history. Reduced-motion settings disable the slide. Authentication checks and Server Actions are shared by both views.
+
+### Local Auth connection
+
+The local app uses the existing `short-link-manager` Neon project (`dark-field-48386271`),
+branch `production` (`br-aged-surf-b55ngn9e`), for Neon Auth only. Its existing email/password
+and localhost settings were already enabled and were preserved. Application links remain
+in local PGlite; no cloud link data was migrated or merged. Existing accounts in that Neon
+Auth branch are shared with any app using the same Auth endpoint. Open the app at
+`http://localhost:3000`, matching `NEXT_PUBLIC_APP_URL`; the numeric `127.0.0.1` origin
+was rejected by Auth in the local check. Vercel and cloud application-data migration are separate steps.
