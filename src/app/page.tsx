@@ -1,8 +1,9 @@
+import { SiteHeader } from "@/components/site/header";
 import { ArrowUpRight, Link2, Copy, BarChart3, FolderHeart, MousePointer2, ShieldCheck, Check, MoveDown, Sparkles, ArrowLeft, ArrowRight } from "lucide-react";
 import { readLocale } from "@/lib/locale-server";
 import { copy } from "@/lib/locale";
 import { getCurrentUser } from "@/lib/auth/session";
-import { LandingSession, AuthButton, AccountButtons } from "@/components/landing/session";
+import { LandingSession, AuthButton } from "@/components/landing/session";
 import { DisplayControls } from "@/components/landing/controls";
 import { Shortener } from "@/components/landing/shortener";
 import { DashboardPreview } from "@/components/landing/preview";
@@ -16,11 +17,7 @@ export default async function Home() {
   return <LandingSession locale={locale} initialEmail={email}>
     <div id="top" className="landing">
       <a className="skip-link" href="#main">{t.skip}</a>
-      <header className="site-header"><div className="header-inner">
-        <a href="#top" className="brand" aria-label={"LinkFlow — " + t.home}><span className="brand-symbol"><Link2 size={19} /></span><span dir="ltr">Link<span>Flow</span></span></a>
-        <nav className="header-nav" aria-label={t.product}><a href="#features">{t.features}</a><a href="#how-it-works">{t.how}</a><a href="#preview">{t.preview}</a></nav>
-        <div className="header-actions"><DisplayControls locale={locale} /><AccountButtons /></div>
-      </div></header>
+      <SiteHeader locale={locale} email={email} />
       <main id="main">
         <section className="hero section-container">
           <div className="eyebrow hero-eyebrow"><span className="live-dot" />{t.pill}<Sparkles size={12} /></div>
