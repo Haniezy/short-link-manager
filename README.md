@@ -8,10 +8,12 @@ Package manager: pnpm 10.10.0. Tailwind CSS v4 and shadcn/ui are installed.
 The backend is implemented and tested. The landing page follows the supplied visual references,
 with Persian/English content, RTL/LTR layouts, persistent light/dark themes, an explicitly labeled
 sample dashboard, and a short-link form connected to the backend for authenticated sessions.
-Authentication buttons currently explain that the dedicated pages are not available; their
-separate user-provided designs must be supplied before implementation. Root loading/error boundaries
-are included. Dedicated login/registration pages, the dashboard list/forms, delete confirmation,
-and the real link detail chart still need to be built after their designs are approved.
+The /login and /signup pages follow the supplied curved-background design, with shared glass
+buttons, Persian/English content, theme support, and email/password Server Actions. Successful
+authentication returns to the landing page while the dashboard UI is pending. Password confirmation
+and basic safe feedback are included; detailed auth error UX is a separate follow-up.
+Root and auth route loading/error boundaries are included. The dashboard list/forms, delete
+confirmation, and the real link detail chart still need to be built after their designs are approved.
 
 **Deployed URL:** not deployed yet. Vercel deployment and browser-based acceptance testing are pending.
 Do not treat this branch as a finished submission.

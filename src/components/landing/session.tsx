@@ -1,9 +1,10 @@
 "use client";
 import { createContext, useContext, type ReactNode } from "react";
 import { ArrowUpRight } from "lucide-react";
-import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import { copy, type Locale } from "@/lib/locale";
 import { Button } from "@/components/ui/button";
+import { GlassButton } from "@/components/ui/glass-button";
 
 type SessionValue = { locale: Locale; email: string | null; openAuth: (mode?: "login" | "signup") => void };
 const SessionContext = createContext<SessionValue | null>(null);
@@ -13,8 +14,9 @@ export function useLandingSession() {
   return value;
 }
 export function LandingSession({ locale, initialEmail, children }: { locale: Locale; initialEmail: string | null; children: ReactNode }) {
-  function openAuth() {
-    toast.info(locale === "fa" ? "صفحهٔ ورود و ثبت‌نام هنوز آماده نشده است." : "The sign-in and sign-up pages are not available yet.");
+  const router = useRouter();
+  function openAuth(mode: "login" | "signup" = "signup") {
+    router.push(mode === "login" ? "/login" : "/signup");
   }
   return <SessionContext.Provider value={{ locale, email: initialEmail, openAuth }}>{children}</SessionContext.Provider>;
 }
@@ -26,6 +28,6 @@ export function AccountButtons() {
   const { locale, openAuth } = useLandingSession(), t = copy[locale];
   return <>
     <Button variant="ghost" className="header-login" onClick={() => openAuth("login")}>{t.login}</Button>
-    <Button className="purple-button header-signup" onClick={() => openAuth("signup")}>{t.signup}<ArrowUpRight size={14} /></Button>
+    <GlassButton className="header-signup" onClick={() => openAuth("signup")}>{t.signup}<ArrowUpRight size={14} /></GlassButton>
   </>;
 }

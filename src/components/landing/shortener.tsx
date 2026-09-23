@@ -8,6 +8,7 @@ import { destinationSchema } from "@/lib/validation";
 import { createLinkAction } from "@/actions/links";
 import { getShortUrl } from "@/lib/short-url";
 import { Button } from "@/components/ui/button";
+import { GlassButton } from "@/components/ui/glass-button";
 import { Input } from "@/components/ui/input";
 
 export function Shortener() {
@@ -43,7 +44,7 @@ export function Shortener() {
     <div className="shortener-title"><span><Sparkles size={15} />{t.formTitle}</span><span className="little-label">LinkFlow</span></div>
     <form action={submit} className="shortener-form">
       <div className="url-input-wrap"><Link2 size={18} aria-hidden="true" /><Input aria-label={t.urlLabel} aria-invalid={!!error} aria-describedby={error ? "url-error" : "url-help"} name="longUrl" dir="ltr" type="url" placeholder="https://your-very-long-link.com/something-great" value={url} onChange={(event) => { setUrl(event.target.value); setError(""); }} required disabled={pending} /></div>
-      <Button type="submit" className="purple-button shorten-button" disabled={pending}>{pending ? t.shortening : t.shorten}{locale === "fa" ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}</Button>
+      <GlassButton type="submit" className="shorten-button" disabled={pending}>{pending ? t.shortening : t.shorten}{locale === "fa" ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}</GlassButton>
     </form>
     {error && <p className="form-error" id="url-error" role="alert">{error}</p>}
     {result ? <div className="shortener-result" role="status"><span className="result-check"><Check size={15} /></span><a href={result} target="_blank" rel="noreferrer" dir="ltr">{result}</a><Button variant="ghost" size="icon" aria-label={t.copy} onClick={copyResult}>{copied ? <Check size={17} /> : <Copy size={17} />}</Button></div> :
