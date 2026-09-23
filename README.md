@@ -179,3 +179,12 @@ migration SQL needed careful ordering and a guard against deleting legacy data. 
 required a local workaround when the migration CLI could not read OS user information. I supplied the
 project and Neon configuration through the console. UI development and final deployment are separate
 remaining stages; the test results here do not claim they are complete.
+
+### Authentication page transitions
+
+Client-side navigation to login or signup opens a full-screen sliding dialog over the
+current page using Next.js intercepted routes. Direct URLs and refreshes render the
+standalone form. The panel slides in only over the landing page; switching between
+login and signup reuses the same panel without replaying the slide. The in-page back
+arrow or Escape slides the panel out to the right before returning home. Browser Back
+uses normal route history. Reduced-motion settings disable the slide. Authentication checks and Server Actions are shared by both views.

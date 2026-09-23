@@ -1,0 +1,23 @@
+.auth-route-overlay[data-slot="dialog-content"] {
+ inset:0; width:100%; max-width:none; height:100dvh; max-height:none;
+ translate:none!important; transform:none; display:block; padding:0; border:0; border-radius:0;
+ overflow-y:auto; overscroll-behavior:contain; gap:0; box-shadow:-12px 0 45px #140d3026;
+ animation:none;
+}
+.auth-route-overlay .auth-page {min-height:100%;}
+.auth-route-overlay .auth-page-content,.auth-route-overlay .auth-art {animation:none;}
+@keyframes auth-page-slide-in {from {transform:translateX(100%);} to {transform:translateX(0);}}
+@media(prefers-reduced-motion:reduce) { .auth-route-overlay[data-slot="dialog-content"] {animation:none;} }
+
+body:has(.landing) .auth-route-overlay[data-slot="dialog-content"] {
+ animation:auth-page-slide-in 950ms cubic-bezier(.22,1,.36,1) both;
+}
+body .auth-route-overlay[data-slot="dialog-content"][data-closing] {
+ animation:auth-page-slide-out 800ms cubic-bezier(.4,0,.2,1) both;
+ pointer-events:none;
+}
+@keyframes auth-page-slide-out {from {transform:translateX(0);} to {transform:translateX(100%);}}
+@media(prefers-reduced-motion:reduce) {
+ body:has(.landing) .auth-route-overlay[data-slot="dialog-content"],
+ body .auth-route-overlay[data-slot="dialog-content"][data-closing] {animation:none;}
+}

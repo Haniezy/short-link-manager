@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Manrope, Geist_Mono, Noto_Sans_Arabic } from "next/font/google";
+import { AuthOverlaySlot } from "@/components/auth/auth-overlay";
 import { Providers } from "@/components/providers";
 import { readLocale } from "@/lib/locale-server";
 import "./globals.css";
@@ -14,9 +15,9 @@ export async function generateMetadata(): Promise<Metadata> {
     description: locale === "fa" ? "لینک‌های کوتاه بسازید و آمار کلیک‌ها را ببینید." : "Create memorable short links and follow every click.",
   };
 }
-export default async function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children, auth }: { children: ReactNode; auth: ReactNode }) {
   const locale = await readLocale();
   return <html lang={locale} dir={locale === "fa" ? "rtl" : "ltr"} suppressHydrationWarning className={`${latin.variable} ${geistMono.variable} ${persian.variable}`}>
-    <body><Providers>{children}</Providers></body>
+    <body><Providers>{children}<AuthOverlaySlot locale={locale}>{auth}</AuthOverlaySlot></Providers></body>
   </html>;
 }
