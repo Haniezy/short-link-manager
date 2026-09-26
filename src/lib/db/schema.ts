@@ -24,3 +24,9 @@ export const clicks = pgTable("clicks", {
 }, (table) => [index("clicks_link_date_idx").on(table.linkId, table.createdAt)]);
 
 export type Link = typeof links.$inferSelect;
+
+export const avatars = pgTable("avatars", {
+  userId: text("user_id").primaryKey(),
+  id: uuid("id").notNull().unique(),
+  webp: text("webp"),
+});

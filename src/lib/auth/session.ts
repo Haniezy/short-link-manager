@@ -1,13 +1,15 @@
 import "server-only";
 import { cache } from "react";
 import { redirect } from "next/navigation";
+import { getAvatarUrl } from "../db/avatars";
 import { getAuth } from "./server";
 
 export const getCurrentUser = cache(async () => {
   const { data, error } = await getAuth().getSession({ query: { disableCookieCache: "true" } });
   if (error) throw new Error("Authentication is temporarily unavailable.");
   if (!data?.user) return null;
-  return { id: data.user.id, email: data.user.email, name: data.user.name, image: data.user.image ?? null, emailVerified: data.user.emailVerified };
+  const avatar = await getAvatarUrl(data.user.id);
+  return { id: data.user.id, email: data.user.email, name: data.user.name, image: avatar === undefined ? data.user.image ?? null : avatar, emailVerified: data.user.emailVerified };
 });
 
 export async function requireUser() {

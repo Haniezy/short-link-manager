@@ -14,8 +14,13 @@ Recharts graph. Loading, error and not-found states are included. The account me
 verified email and offers explicit sign-out and a protected `/dashboard/profile` page.
 The profile includes Neon-backed display-name updates, password changes with other-session
 revocation, read-only email and account totals. Theme/language controls remain in the shared header.
-The header shows the saved display name and photo. Profile photos use a validated HTTPS image
-URL (file uploads are not implemented); missing or broken images fall back to an initial.
+The header shows the saved display name and photo. Profile photos are uploaded through a Server Action (JPG/PNG/WebP, at most 512 KB).
+A paperclip opens the file picker, followed by a lazy-loaded drag/zoom crop dialog with
+a circular preview. Confirming the crop prepares a 256×256 image locally; Save photo uploads it.
+Cancel keeps the previous selection. The server decodes and normalizes to 256×256 WebP, removes metadata and stores at most
+64 KB per user in Neon. A read-only `/avatars/[id]` route serves the image with a
+versioned opaque ID; image bytes are never placed in Auth cookies or page session data.
+Missing or broken images fall back to an initial. Migration 0004 creates the avatar table.
 
 Local UI checks used temporary fixture data to review desktop/mobile layouts, both themes,
 inline validation, delete confirmation and empty states. The temporary preview route was removed.

@@ -1,11 +1,11 @@
 import { beforeEach, expect, it, vi } from "vitest";
-const auth = vi.hoisted(() => ({ updateUser: vi.fn(), changePassword: vi.fn() }));
+const auth = vi.hoisted(() => ({ updateUser: vi.fn(), changePassword: vi.fn(), signIn: { email: vi.fn() } }));
 const currentUser = vi.hoisted(() => vi.fn());
 vi.mock("../src/lib/auth/server", () => ({ getAuth: () => auth }));
 vi.mock("../src/lib/auth/session", () => ({ getCurrentUser: currentUser }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 import { updateProfileAction, changePasswordAction } from "../src/actions/profile";
-beforeEach(() => { vi.resetAllMocks(); currentUser.mockResolvedValue({ id: "user-a" }); });
+beforeEach(() => { vi.resetAllMocks(); currentUser.mockResolvedValue({ id: "user-a", email: "user@gmail.com" }); auth.signIn.email.mockResolvedValue({ data: { user: { id: "user-a" } }, error: null }); });
 it("rejects anonymous profile and password changes", async () => {
   currentUser.mockResolvedValue(null);
   expect((await updateProfileAction({ name: "Name" })).error).toBeTruthy();
@@ -25,6 +25,7 @@ it("only updates the signed-in user's allowed name field", async () => {
 it("requests revocation of other sessions and does not forward confirmation", async () => {
   auth.changePassword.mockResolvedValue({ error: null });
   expect((await changePasswordAction({ currentPassword: "old-password", newPassword: "new-password", confirmPassword: "new-password" })).error).toBeNull();
+  expect(auth.signIn.email).toHaveBeenCalledWith({ email: "user@gmail.com", password: "new-password" });
   expect(auth.changePassword).toHaveBeenCalledWith({ currentPassword: "old-password", newPassword: "new-password", revokeOtherSessions: true });
 });
 it("sanitizes upstream errors and thrown exceptions", async () => {
@@ -35,14 +36,15 @@ it("sanitizes upstream errors and thrown exceptions", async () => {
   const password = await changePasswordAction({ currentPassword: "old-password", newPassword: "new-password", confirmPassword: "new-password" });
   expect(password.error).toBeTruthy(); expect(JSON.stringify(password)).not.toContain("PRIVATE_PROVIDER_DATA");
 });
-it("validates photo URLs and allows removing a saved photo", async () => {
-  for (const image of ["javascript:alert(1)", "http://example.com/photo.png", "not-a-url"]) {
-    expect((await updateProfileAction({ name: "Name", image })).fieldErrors?.image).toBeDefined();
-  }
-  expect(auth.updateUser).not.toHaveBeenCalled();
+it("ignores photo URL fields in name updates", async () => {
   auth.updateUser.mockResolvedValue({ error: null });
   await updateProfileAction({ name: "Name", image: "https://example.com/photo.jpg" });
-  expect(auth.updateUser).toHaveBeenLastCalledWith({ name: "Name", image: "https://example.com/photo.jpg" });
-  await updateProfileAction({ name: "Name", image: "" });
-  expect(auth.updateUser).toHaveBeenLastCalledWith({ name: "Name", image: null });
+  expect(auth.updateUser).toHaveBeenCalledWith({ name: "Name" });
+});
+
+it("reports a completed password change accurately if session renewal fails", async () => {
+  auth.changePassword.mockResolvedValue({ error: null });
+  auth.signIn.email.mockRejectedValue(new Error("UPSTREAM_PRIVATE"));
+  const result = await changePasswordAction({ currentPassword: "old-password", newPassword: "new-password", confirmPassword: "new-password" });
+  expect(result).toEqual({ data: { saved: true, requiresSignIn: true }, error: null });
 });

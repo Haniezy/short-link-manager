@@ -1,5 +1,6 @@
 "use client";
 
+import { AvatarUpload } from "./avatar-upload";
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, LockKeyhole, Save, UserRound, LogOut } from "lucide-react";
@@ -21,13 +22,13 @@ const translations: Record<string, string> = {
 };
 export function ProfileForm({ name, email, image, locale }: { name: string; email: string; image: string | null; locale: Locale }) {
   const fa = locale === "fa", router = useRouter();
-  const [pending, setPending] = useState(false), [error, setError] = useState(""), [imageError, setImageError] = useState("");
+  const [pending, setPending] = useState(false), [error, setError] = useState("");
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); if (pending) return;
     const data = new FormData(event.currentTarget);
-    const parsed = profileSchema.safeParse({ name: data.get("name"), image: data.get("image") });
-    if (!parsed.success) { const fields = validationError(parsed.error).fieldErrors; setError(fields.name?.[0] ?? ""); setImageError(fields.image?.[0] ?? ""); return; }
-    setError(""); setImageError(""); setPending(true);
+    const parsed = profileSchema.safeParse({ name: data.get("name") });
+    if (!parsed.success) { const fields = validationError(parsed.error).fieldErrors; setError(fields.name?.[0] ?? ""); return; }
+    setError(""); setPending(true);
     try {
       const result = await updateProfileAction(parsed.data);
       if (result.error) { toast.error(fa ? "ذخیره نشد؛ دوباره تلاش کنید." : result.error); return; }
@@ -37,12 +38,11 @@ export function ProfileForm({ name, email, image, locale }: { name: string; emai
   }
   return <section className="dashboard-panel profile-panel"><h2><UserRound size={18} />{fa ? "مشخصات فردی" : "Personal details"}</h2><p>{fa ? "نامی که در حساب شما نمایش داده می‌شود." : "Make this workspace feel like yours."}</p><form noValidate onSubmit={submit} aria-busy={pending}>
     <div className="profile-fields"><div><Label htmlFor="profile-name">{fa ? "نام نمایشی" : "Display name"}</Label><Input id="profile-name" name="name" defaultValue={name} maxLength={80} autoComplete="name" disabled={pending} aria-invalid={!!error} aria-describedby={error ? "name-error" : undefined} onChange={() => setError("")} />{error && <p id="name-error" className="dashboard-field-error" role="alert">{fa ? translations[error] ?? "نام معتبر وارد کنید." : error}</p>}</div><div><Label htmlFor="profile-email">{fa ? "ایمیل حساب" : "Account email"}</Label><Input id="profile-email" value={email} readOnly dir="ltr" /><small>{fa ? "ایمیل ورود شما؛ در این صفحه قابل تغییر نیست." : "Your sign-in email; read-only on this page."}</small></div></div>
-    <div className="profile-image-field"><Label htmlFor="profile-image">{fa ? "آدرس عکس پروفایل" : "Profile photo URL"}</Label><Input id="profile-image" name="image" type="url" defaultValue={image || ""} dir="ltr" placeholder="https://example.com/photo.jpg" maxLength={2048} disabled={pending} aria-invalid={!!imageError} aria-describedby={imageError ? "image-error" : "image-hint"} onChange={() => setImageError("")} /><small id="image-hint">{fa ? "لینک مستقیم HTTPS عکس را وارد کنید؛ برای حذف عکس، این فیلد را خالی بگذارید." : "Paste a direct HTTPS image URL. Leave empty to remove your photo."}</small>{imageError && <p id="image-error" className="dashboard-field-error" role="alert">{fa ? "آدرس معتبر عکس با https:// وارد کنید (حداکثر ۲۰۴۸ کاراکتر)." : imageError}</p>}</div>
     <GlassButton type="submit" disabled={pending}><Save size={16} />{pending ? (fa ? "در حال ذخیره…" : "Saving…") : (fa ? "ذخیرهٔ تغییرات" : "Save changes")}</GlassButton>
-  </form></section>;
+  </form><AvatarUpload image={image} name={name} locale={locale} /></section>;
 }
 export function PasswordForm({ locale }: { locale: Locale }) {
-  const fa = locale === "fa";
+  const fa = locale === "fa", router = useRouter();
   const [pending, setPending] = useState(false), [errors, setErrors] = useState<Record<string, string[]>>({}), [visible, setVisible] = useState<Record<string, boolean>>({});
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); if (pending) return;
@@ -53,7 +53,12 @@ export function PasswordForm({ locale }: { locale: Locale }) {
     try {
       const result = await changePasswordAction(parsed.data);
       if (result.error) { toast.error(fa ? "تغییر رمز انجام نشد؛ رمز فعلی را بررسی کنید و دوباره تلاش کنید." : result.error); return; }
-      form.reset(); setVisible({}); toast.success(fa ? "رمز تغییر کرد و نشست‌های دیگر بسته شدند." : "Password changed. Other sessions signed out.");
+      form.reset(); setVisible({});
+      if (result.data?.requiresSignIn) {
+        toast.info(fa ? "رمز تغییر کرد؛ برای ادامه با رمز جدید وارد شوید." : "Password changed. Please sign in with your new password.");
+        router.replace("/login"); return;
+      }
+      toast.success(fa ? "رمز تغییر کرد و نشست‌های دیگر بسته شدند." : "Password changed. Other sessions signed out.");
     } catch { toast.error(fa ? "تغییر رمز انجام نشد؛ دوباره تلاش کنید." : "Could not change your password."); }
     finally { setPending(false); }
   }
