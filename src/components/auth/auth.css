@@ -79,3 +79,7 @@
  .auth-page-content { animation:auth-form-enter 420ms cubic-bezier(.2,.7,.25,1) both; }
  .auth-art { animation:auth-art-enter 550ms ease-out both; }
 }
+
+/* Full-bleed auth screens keep scrolling without a contrasting scrollbar track. */
+html:has(.auth-page) { scrollbar-width:none; }
+html:has(.auth-page)::-webkit-scrollbar { width:0; height:0; }

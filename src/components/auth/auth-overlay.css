@@ -21,3 +21,12 @@ body .auth-route-overlay[data-slot="dialog-content"][data-closing] {
  body:has(.landing) .auth-route-overlay[data-slot="dialog-content"],
  body .auth-route-overlay[data-slot="dialog-content"][data-closing] {animation:none;}
 }
+
+.auth-route-overlay[data-slot="dialog-content"] {
+ overflow-x:hidden;
+ scrollbar-width:none;
+}
+.auth-route-overlay[data-slot="dialog-content"]::-webkit-scrollbar {
+ width:0;
+ height:0;
+}
