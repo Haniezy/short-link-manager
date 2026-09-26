@@ -12,14 +12,14 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 import { createLinkAction, deleteLinkAction } from "../src/actions/links";
 import { getClicksByDay, getLinkForUser, getLinksForUser, resolveLink } from "../src/lib/db/queries";
-import { GET, HEAD } from "../src/app/r/[slug]/route";
+import { GET, HEAD } from "../src/app/r/[owner]/[slug]/route";
 import { loadDashboardPage, loadDashboard, loadLinkDetails } from "../src/lib/links";
 import * as slugModule from "../src/lib/slug";
 
 const alice = { id: "neon-alice", email: "alice@example.com" };
 const bob = { id: "neon-bob", email: "bob@example.com" };
 const request = new Request("https://short.example/r/test");
-const context = (slug: string) => ({ params: Promise.resolve({ slug }) });
+const context = (slug: string) => ({ params: Promise.resolve({ owner: alice.id, slug }) });
 
 beforeAll(async () => { await migrate(db, { migrationsFolder: "./drizzle" }); });
 beforeEach(async () => {
@@ -107,16 +107,22 @@ describe("link ownership and collisions", () => {
     expect(result.data?.link.slug).toMatch(/^[a-zA-Z0-9]{6}$/);
     expect(result.data?.link.title).toBeNull();
   });
-  it("reports duplicate custom slugs as an inline field error across owners", async () => {
+  it("rejects duplicates only within the same owner", async () => {
     await create();
-    session.getCurrentUser.mockResolvedValue(bob);
     const duplicate = await createLinkAction({ longUrl: "https://example.org", customSlug: "test" });
     expect(duplicate.fieldErrors?.customSlug).toEqual(["Slug already taken."]);
     expect(await db.select().from(links)).toHaveLength(1);
+    session.getCurrentUser.mockResolvedValue(bob);
+    const other = await createLinkAction({ longUrl: "https://example.org", customSlug: "test" });
+    expect(other.error).toBeNull();
+    expect(await resolveLink("test", true, bob.id)).toBe("https://example.org");
+    expect(await resolveLink("test", false, alice.id)).toBe("https://example.com/path?q=1");
+    expect((await getLinkForUser(other.data!.link.id, bob.id))?.clicks).toBe(1);
+    expect(await resolveLink("test", false)).toBeNull();
   });
   it("isolates list, detail, statistics and deletion between users", async () => {
     const link = await create();
-    await resolveLink("test", true);
+    await resolveLink("test", true, alice.id);
     expect(await getLinksForUser(bob.id)).toEqual([]);
     expect(await getLinkForUser(link.id, bob.id)).toBeNull();
     expect((await getClicksByDay(link.id, bob.id)).every((day) => day.count === 0)).toBe(true);
@@ -126,10 +132,10 @@ describe("link ownership and collisions", () => {
   });
   it("deletes a user's own link and cascades click records", async () => {
     const link = await create();
-    await resolveLink("test", true);
+    await resolveLink("test", true, alice.id);
     expect(await deleteLinkAction({ id: link.id })).toEqual({ data: null, error: null });
     expect(await db.select().from(clicks)).toEqual([]);
-    expect(await resolveLink("test", false)).toBeNull();
+    expect(await resolveLink("test", false, alice.id)).toBeNull();
   });
 });
 
@@ -160,7 +166,7 @@ describe("redirect and analytics", () => {
   });
   it("keeps the total and event log equal across concurrent requests", async () => {
     const link = await create();
-    await Promise.all(Array.from({ length: 12 }, () => resolveLink("test", true)));
+    await Promise.all(Array.from({ length: 12 }, () => resolveLink("test", true, alice.id)));
     expect((await getLinkForUser(link.id, alice.id))?.clicks).toBe(12);
     expect(await db.select().from(clicks)).toHaveLength(12);
   });

@@ -24,7 +24,7 @@ export async function insertLinkForUser(userId: string, input: {
     const [link] = await db.insert(links).values({
       userId, slug: input.customSlug ?? generateSlug(),
       destinationUrl: input.longUrl, title: input.title,
-    }).onConflictDoNothing({ target: links.slug }).returning();
+    }).onConflictDoNothing({ target: [links.userId, links.slug] }).returning();
     if (link) return link;
     if (input.customSlug) return null;
   }
@@ -37,16 +37,17 @@ export async function deleteLinkForUser(id: string, userId: string): Promise<boo
     .where(and(eq(links.id, id), eq(links.userId, userId))).returning({ id: links.id });
   return deleted.length > 0;
 }
-export async function resolveLink(slug: string, recordClick: boolean): Promise<string | null> {
-  if (!slugSchema.safeParse(slug).success) return null;
+export async function resolveLink(slug: string, recordClick: boolean, userId?: string): Promise<string | null> {
+  if (!slugSchema.safeParse(slug).success || (userId !== undefined && !userIdSchema.safeParse(userId).success)) return null;
+  const match = userId === undefined ? eq(links.legacySlug, slug) : and(eq(links.userId, userId), eq(links.slug, slug));
   if (!recordClick) {
     const [link] = await db.select({ destination: links.destinationUrl }).from(links)
-      .where(eq(links.slug, slug)).limit(1);
+      .where(match).limit(1);
     return link?.destination ?? null;
   }
   return db.transaction(async (tx) => {
     const [link] = await tx.update(links).set({ clicks: sql`${links.clicks} + 1` })
-      .where(eq(links.slug, slug)).returning({ id: links.id, destination: links.destinationUrl });
+      .where(match).returning({ id: links.id, destination: links.destinationUrl });
     if (!link) return null;
     await tx.insert(clicks).values({ linkId: link.id });
     return link.destination;

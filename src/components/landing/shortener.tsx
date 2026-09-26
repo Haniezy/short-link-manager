@@ -23,7 +23,7 @@ export function Shortener() {
     try {
       const response = await createLinkAction({ longUrl: value });
       if (response.error || !response.data) { setError(t.createError); toast.error(t.createError); return; }
-      setResult(getShortUrl(response.data.link.slug)); setCopied(false);
+      setResult(getShortUrl(response.data.link.slug, response.data.link.userId)); setCopied(false);
       toast.success(t.result);
     } catch { setError(t.generalError); toast.error(t.generalError); }
     finally { setPending(false); }
