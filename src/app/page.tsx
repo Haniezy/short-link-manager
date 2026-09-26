@@ -10,14 +10,15 @@ import { DashboardPreview } from "@/components/landing/preview";
 
 export default async function Home() {
   const locale = await readLocale(), t = copy[locale];
-  let email: string | null = null;
-  try { email = (await getCurrentUser())?.email ?? null; } catch { /* Public landing remains available during an auth outage. */ }
+  let user: Awaited<ReturnType<typeof getCurrentUser>> = null;
+  try { user = await getCurrentUser(); } catch { /* Public landing remains available during an auth outage. */ }
+  const email = user?.email ?? null;
   const icons = [Link2, FolderHeart, MousePointer2, BarChart3];
   const strengths = [Link2, Copy, BarChart3, FolderHeart];
   return <LandingSession locale={locale} initialEmail={email}>
     <div id="top" className="landing">
       <a className="skip-link" href="#main">{t.skip}</a>
-      <SiteHeader locale={locale} email={email} />
+      <SiteHeader locale={locale} email={email} name={user?.name} image={user?.image} />
       <main id="main">
         <section className="hero section-container">
           <div className="eyebrow hero-eyebrow"><span className="live-dot" />{t.pill}<Sparkles size={12} /></div>

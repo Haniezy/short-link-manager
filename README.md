@@ -11,7 +11,11 @@ now goes to `/dashboard`. The dashboard includes server-paginated links (12 per 
 link/click summaries, Zod-validated creation, clipboard copying and confirmation before deletion.
 Each owned link has a detail page with its destination, creation date, total clicks and a seven-day
 Recharts graph. Loading, error and not-found states are included. The account menu displays the
-verified email and offers explicit sign-out; a profile page is not implemented.
+verified email and offers explicit sign-out and a protected `/dashboard/profile` page.
+The profile includes Neon-backed display-name updates, password changes with other-session
+revocation, read-only email and account totals. Theme/language controls remain in the shared header.
+The header shows the saved display name and photo. Profile photos use a validated HTTPS image
+URL (file uploads are not implemented); missing or broken images fall back to an initial.
 
 Local UI checks used temporary fixture data to review desktop/mobile layouts, both themes,
 inline validation, delete confirmation and empty states. The temporary preview route was removed.
@@ -201,3 +205,11 @@ in local PGlite; no cloud link data was migrated or merged. Existing accounts in
 Auth branch are shared with any app using the same Auth endpoint. Open the app at
 `http://localhost:3000`, matching `NEXT_PUBLIC_APP_URL`; the numeric `127.0.0.1` origin
 was rejected by Auth in the local check. Vercel and cloud application-data migration are separate steps.
+
+### Profile verification
+
+Profile action tests cover unauthenticated access, validation, allowed-field filtering,
+other-session revocation requests and sanitized provider errors. Desktop/mobile light/dark
+layouts and the account menu were checked with temporary fixtures, then the fixture route
+was removed. Anonymous profile access redirects to login. Live profile/password mutations
+against a real account still need acceptance testing; no personal password was changed.

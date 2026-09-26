@@ -1,15 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 // Read persisted counts; opening a link must only count at the redirect endpoint.
 export function RefreshStats() {
   const router = useRouter();
+  const pathname = usePathname();
   const [pending, startTransition] = useTransition();
   const lastRefresh = useRef(0);
 
   useEffect(() => {
+    if (pathname === "/dashboard/profile") return;
     let clickTimer: ReturnType<typeof setTimeout> | undefined;
     function refresh() {
       if (document.visibilityState !== "visible" || pending || Date.now() - lastRefresh.current < 1000) return;
@@ -35,7 +37,7 @@ export function RefreshStats() {
       document.removeEventListener("click", onLinkClick);
       document.removeEventListener("auxclick", onLinkClick);
     };
-  }, [router, pending]);
+  }, [router, pending, pathname]);
 
   return null;
 }

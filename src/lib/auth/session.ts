@@ -7,7 +7,7 @@ export const getCurrentUser = cache(async () => {
   const { data, error } = await getAuth().getSession({ query: { disableCookieCache: "true" } });
   if (error) throw new Error("Authentication is temporarily unavailable.");
   if (!data?.user) return null;
-  return { id: data.user.id, email: data.user.email };
+  return { id: data.user.id, email: data.user.email, name: data.user.name, image: data.user.image ?? null, emailVerified: data.user.emailVerified };
 });
 
 export async function requireUser() {
