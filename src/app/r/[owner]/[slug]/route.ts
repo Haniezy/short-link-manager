@@ -4,12 +4,12 @@ import { httpError } from "@/lib/http-error";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
-type RouteContext = { params: Promise<{ slug: string }> };
+type RouteContext = { params: Promise<{ owner: string; slug: string }> };
 
 async function respond(context: RouteContext, head: boolean): Promise<Response> {
   try {
-    const { slug } = await context.params;
-    const destination = await resolveLink(slug, !head);
+    const { owner, slug } = await context.params;
+    const destination = await resolveLink(slug, !head, owner);
     if (!destination) return httpError(404, head);
     return NextResponse.redirect(destination, { status: 307, headers: { "Cache-Control": "no-store" } });
   } catch {

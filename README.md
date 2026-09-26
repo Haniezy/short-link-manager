@@ -114,7 +114,7 @@ The application never stores passwords or implements its own session tokens.
 - src/proxy.ts and src/app/dashboard/layout.tsx: dashboard authentication gates. Every action/read service
   also checks authentication independently.
 - src/lib/short-url.ts: builds the full public short URL from NEXT_PUBLIC_APP_URL.
-- /r/[slug]: public GET redirect with status 307, a matching click event and an atomic counter increment.
+- /r/[owner]/[slug] (and preserved legacy /r/[slug] aliases): public GET redirect with status 307, a matching click event and an atomic counter increment.
   HEAD resolves the same destination without recording a click.
 
 Results use `{ data, error }`, with optional `fieldErrors` for inline validation. Expected failures
@@ -125,10 +125,14 @@ are validated with Zod. UI code must still handle the returned errors and pendin
 
 - New registrations accept only valid email addresses on the exact `gmail.com` domain, per product request. Zod enforces this in both the form and Server Action; it does not verify mailbox ownership. Existing non-Gmail accounts can still sign in.
 
-- **Slugs are globally unique and case-sensitive.** The brief says “unique per user”, but the public
-  route /r/[slug] has no user namespace. Allowing duplicate slugs across users would make redirects
-  ambiguous. Global uniqueness is enforced in Postgres, including concurrent requests. Custom slugs
-  allow letters, numbers and dashes, up to 32 characters; generated slugs have six characters.
+- **Slugs are unique per user and case-sensitive.** Public URLs use
+  `/r/[owner]/[slug]` so different users can choose the same slug without ambiguous
+  redirects. The owner is the opaque Neon Auth ID, never an email. This deliberately
+  extends the brief's `/r/[slug]` path to satisfy its per-user uniqueness requirement.
+  Migration 0003 preserves existing single-segment URLs as immutable unique aliases;
+  new links do not claim these aliases. Existing links and click history are retained.
+  Custom slugs allow letters, numbers and dashes, up to 32 characters; generated slugs
+  have six characters. Uniqueness is enforced by a composite database constraint.
 - Titles are optional, trimmed and limited to 120 characters; destinations are http(s) URLs up to
   2048 characters. A collision on a generated slug retries at most four times.
 - **No internal auth API routes.** Email/password actions invoke the Neon Auth server SDK directly.
@@ -198,15 +202,20 @@ login and signup reuses the same panel without replaying the slide. The in-page 
 arrow or Escape slides the panel out to the right before returning home. Browser Back
 uses normal route history. Reduced-motion settings disable the slide. Authentication checks and Server Actions are shared by both views.
 
-### Local Auth connection
+### Local Neon development connection
 
-The local app uses the existing `short-link-manager` Neon project (`dark-field-48386271`),
-branch `production` (`br-aged-surf-b55ngn9e`), for Neon Auth only. Its existing email/password
-and localhost settings were already enabled and were preserved. Application links remain
-in local PGlite; no cloud link data was migrated or merged. Existing accounts in that Neon
-Auth branch are shared with any app using the same Auth endpoint. Open the app at
-`http://localhost:3000`, matching `NEXT_PUBLIC_APP_URL`; the numeric `127.0.0.1` origin
-was rejected by Auth in the local check. Vercel and cloud application-data migration are separate steps.
+Local development now uses Neon Postgres and Neon Auth on the same `development`
+branch (`br-steep-math-b5t022r3`) of the existing `short-link-manager` project
+(`dark-field-48386271`). The branch was copied from `production`; subsequent changes
+are isolated. Production was not migrated or modified. Connection secrets are in
+ignored `.env.local`. Local migrations through 0003 were applied to development.
+Open `http://localhost:3000`; sign in again if cookies from the prior Auth branch expire.
+
+A real Neon transaction verified that two owners can use the same slug and duplicate
+slugs for one owner are rejected; all test rows were rolled back. Local PGlite files
+and a backup were retained but are not used or migrated: the existing local store
+failed startup with a checkpoint error. Its old links are not present in Neon unless
+separately recovered and migrated. Vercel deployment is still pending.
 
 ### Profile verification
 
