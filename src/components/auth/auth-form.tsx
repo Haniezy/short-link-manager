@@ -19,6 +19,7 @@ const labels = {
 };
 
 const fieldMessages: Record<string, string> = {
+  "Please use a Gmail address ending in @gmail.com.": "لطفاً آدرس جیمیل با دامنهٔ @gmail.com وارد کنید.",
   "Enter a valid email address.": "یک آدرس ایمیل معتبر وارد کنید.",
   "Email is too long.": "ایمیل باید حداکثر ۲۵۴ کاراکتر باشد.",
   "Password must be at least 8 characters.": "رمز عبور باید حداقل ۸ کاراکتر باشد.",

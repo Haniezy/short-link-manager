@@ -19,7 +19,7 @@ export const createLinkSchema = z.object({
 export const deleteLinkSchema = z.object({ id: linkIdSchema });
 const emailSchema = z.string().trim().toLowerCase().max(254, "Email is too long.").pipe(z.email("Enter a valid email address."));
 export const registerSchema = z.object({
-  email: emailSchema,
+  email: emailSchema.refine(value => value.endsWith("@gmail.com"), "Please use a Gmail address ending in @gmail.com."),
   password: z.string().min(8, "Password must be at least 8 characters.")
     .max(128, "Password must be at most 128 characters."),
 });

@@ -123,6 +123,8 @@ are validated with Zod. UI code must still handle the returned errors and pendin
 
 ## Decisions I made
 
+- New registrations accept only valid email addresses on the exact `gmail.com` domain, per product request. Zod enforces this in both the form and Server Action; it does not verify mailbox ownership. Existing non-Gmail accounts can still sign in.
+
 - **Slugs are globally unique and case-sensitive.** The brief says “unique per user”, but the public
   route /r/[slug] has no user namespace. Allowing duplicate slugs across users would make redirects
   ambiguous. Global uniqueness is enforced in Postgres, including concurrent requests. Custom slugs
