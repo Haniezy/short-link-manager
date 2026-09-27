@@ -227,5 +227,17 @@ separately recovered and migrated. Vercel deployment is still pending.
 Profile action tests cover unauthenticated access, validation, allowed-field filtering,
 other-session revocation requests and sanitized provider errors. Desktop/mobile light/dark
 layouts and the account menu were checked with temporary fixtures, then the fixture route
-was removed. Anonymous profile access redirects to login. Live profile/password mutations
-against a real account still need acceptance testing; no personal password was changed.
+was removed. Anonymous profile access redirects to login. Live display-name mutations still need acceptance testing. A disposable Neon development
+account verified password changes via the actual profile Server Action: the current session
+remained valid, a second session was revoked, the old password was rejected, and the new
+password worked. Test accounts were deleted; no personal password was changed.
+The action renews the current session after changing the password. If renewal fails, it
+reports that the password changed and asks for sign-in, rather than reporting a failed change.
+
+Password-session regression: the Neon SDK uses a request context backed by Next.js's
+mutable cookie store, so a same-response RSC render reads the renewed token rather
+than the original request header. A disposable development account was tested with
+router-state headers: no action redirect, current session valid, profile accessible,
+and a second session revoked. A unit test covers reading the rotated cookie while
+incoming headers still contain the old token. Native Chrome password-update prompts
+are browser behavior and are not suppressed by the app.

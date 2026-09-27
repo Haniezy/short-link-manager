@@ -1,11 +1,11 @@
 import { beforeEach, expect, it, vi } from "vitest";
-const auth = vi.hoisted(() => ({ updateUser: vi.fn(), changePassword: vi.fn(), signIn: { email: vi.fn() } }));
+const auth = vi.hoisted(() => ({ getSession: vi.fn(), updateUser: vi.fn(), changePassword: vi.fn(), signIn: { email: vi.fn() } }));
 const currentUser = vi.hoisted(() => vi.fn());
 vi.mock("../src/lib/auth/server", () => ({ getAuth: () => auth }));
 vi.mock("../src/lib/auth/session", () => ({ getCurrentUser: currentUser }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 import { updateProfileAction, changePasswordAction } from "../src/actions/profile";
-beforeEach(() => { vi.resetAllMocks(); currentUser.mockResolvedValue({ id: "user-a", email: "user@gmail.com" }); auth.signIn.email.mockResolvedValue({ data: { user: { id: "user-a" } }, error: null }); });
+beforeEach(() => { vi.resetAllMocks(); currentUser.mockResolvedValue({ id: "user-a", email: "user@gmail.com" }); auth.getSession.mockResolvedValue({ data: { user: { id: "user-a" } }, error: null }); auth.signIn.email.mockResolvedValue({ data: { user: { id: "user-a" } }, error: null }); });
 it("rejects anonymous profile and password changes", async () => {
   currentUser.mockResolvedValue(null);
   expect((await updateProfileAction({ name: "Name" })).error).toBeTruthy();
@@ -24,7 +24,7 @@ it("only updates the signed-in user's allowed name field", async () => {
 });
 it("requests revocation of other sessions and does not forward confirmation", async () => {
   auth.changePassword.mockResolvedValue({ error: null });
-  expect((await changePasswordAction({ currentPassword: "old-password", newPassword: "new-password", confirmPassword: "new-password" })).error).toBeNull();
+  expect(await changePasswordAction({ currentPassword: "old-password", newPassword: "new-password", confirmPassword: "new-password" })).toEqual({ data: { saved: true, requiresSignIn: false }, error: null });
   expect(auth.signIn.email).toHaveBeenCalledWith({ email: "user@gmail.com", password: "new-password" });
   expect(auth.changePassword).toHaveBeenCalledWith({ currentPassword: "old-password", newPassword: "new-password", revokeOtherSessions: true });
 });
@@ -47,4 +47,11 @@ it("reports a completed password change accurately if session renewal fails", as
   auth.signIn.email.mockRejectedValue(new Error("UPSTREAM_PRIVATE"));
   const result = await changePasswordAction({ currentPassword: "old-password", newPassword: "new-password", confirmPassword: "new-password" });
   expect(result).toEqual({ data: { saved: true, requiresSignIn: true }, error: null });
+});
+
+it("does not attempt session renewal after a rejected password change", async () => {
+  auth.changePassword.mockResolvedValue({ error: { message: "Wrong current password" } });
+  const result = await changePasswordAction({ currentPassword: "old-password", newPassword: "new-password", confirmPassword: "new-password" });
+  expect(result.data).toBeNull(); expect(result.error).toBeTruthy();
+  expect(auth.signIn.email).not.toHaveBeenCalled();
 });

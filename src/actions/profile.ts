@@ -32,7 +32,10 @@ export async function changePasswordAction(input: unknown): Promise<ActionResult
     let requiresSignIn = true;
     try {
       const session = await getAuth().signIn.email({ email: user.email, password: parsed.data.newPassword });
-      requiresSignIn = !!session.error || !session.data;
+      if (!session.error && session.data) {
+        const verified = await getAuth().getSession({ query: { disableCookieCache: "true" } });
+        requiresSignIn = !!verified.error || verified.data?.user.id !== user.id;
+      }
     } catch { /* Password was changed; do not report a failed password mutation. */ }
     return { data: { saved: true, requiresSignIn }, error: null };
   } catch { return { data: null, error: "Could not change your password. Try again." }; }
