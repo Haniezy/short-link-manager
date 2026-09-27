@@ -1,11 +1,12 @@
 "use client";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, startTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Link2, Plus, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GlassButton } from "@/components/ui/glass-button";
+import { clearLinkDraft, readLinkDraft } from "@/lib/link-draft";
 import { createLinkAction } from "@/actions/links";
 import { createLinkSchema, validationError } from "@/lib/validation";
 import type { Locale } from "@/lib/locale";
@@ -13,6 +14,11 @@ import type { Locale } from "@/lib/locale";
 export function CreateLinkForm({ locale }: { locale: Locale }) {
   const fa = locale === "fa", router = useRouter();
   const [errors, setErrors] = useState<Record<string, string[]>>({}), [pending, setPending] = useState(false);
+  const [destination, setDestination] = useState("");
+  useEffect(() => {
+    const draft = readLinkDraft();
+    if (draft) startTransition(() => setDestination(current => current || draft));
+  }, []);
   function errorText(name: string) {
     const error = errors[name]?.[0];
     if (!error) return null;
@@ -34,13 +40,13 @@ export function CreateLinkForm({ locale }: { locale: Locale }) {
         else toast.error(fa ? "ساخت لینک انجام نشد؛ دوباره تلاش کنید." : "Could not create the link. Please try again.");
         return;
       }
-      form.reset(); toast.success(fa ? "لینک کوتاه شما ساخته شد." : "Your short link is ready."); router.replace("/dashboard"); router.refresh();
+      clearLinkDraft(); setDestination(""); form.reset(); toast.success(fa ? "لینک کوتاه شما ساخته شد." : "Your short link is ready."); router.replace("/dashboard"); router.refresh();
     } catch { toast.error(fa ? "ساخت لینک انجام نشد؛ دوباره تلاش کنید." : "Could not create the link."); }
     finally { setPending(false); }
   }
   return <section className="dashboard-panel create-panel" id="create-link"><div className="dashboard-panel-heading"><h2><Link2 size={19} />{fa ? "یک لینک تازه بسازید" : "Create a new link"}</h2><span><Sparkles size={13} />{fa ? "کوتاه، خوانا، به‌یادماندنی" : "Short. Simple. Memorable."}</span></div>
     <form noValidate onSubmit={submit} aria-busy={pending} onChange={(event) => { if (event.target instanceof HTMLInputElement) { const name = event.target.name; setErrors(current => ({ ...current, [name]: [] })); } }}>
-      <div className="create-fields"><div className="destination-field"><Label htmlFor="longUrl">{fa ? "آدرس مقصد" : "Destination URL"}</Label><Input {...props("longUrl")} id="longUrl" name="longUrl" type="url" dir="ltr" placeholder="https://example.com/your-long-link" required maxLength={2048} disabled={pending} />{errorText("longUrl")}</div>
+      <div className="create-fields"><div className="destination-field"><Label htmlFor="longUrl">{fa ? "آدرس مقصد" : "Destination URL"}</Label><Input {...props("longUrl")} id="longUrl" name="longUrl" value={destination} onChange={event => setDestination(event.target.value)} type="url" dir="ltr" placeholder="https://example.com/your-long-link" required maxLength={2048} disabled={pending} />{errorText("longUrl")}</div>
       <div><Label htmlFor="customSlug">{fa ? "آدرس دلخواه (اختیاری)" : "Custom slug (optional)"}</Label><Input {...props("customSlug")} id="customSlug" name="customSlug" dir="ltr" placeholder="your-story" maxLength={32} disabled={pending} />{errorText("customSlug")}</div>
       <div><Label htmlFor="title">{fa ? "عنوان (اختیاری)" : "Title (optional)"}</Label><Input {...props("title")} id="title" name="title" placeholder={fa ? "پروژهٔ جدید من" : "My new project"} maxLength={120} disabled={pending} />{errorText("title")}</div>
       <GlassButton type="submit" disabled={pending}><Plus size={17} />{pending ? (fa ? "در حال ساخت…" : "Creating…") : (fa ? "ساخت لینک" : "Create link")}</GlassButton></div>

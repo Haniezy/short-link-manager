@@ -24,7 +24,7 @@ export function RefreshStats() {
       clearTimeout(clickTimer);
       clickTimer = setTimeout(refresh, 1000);
     }
-    const interval = setInterval(refresh, 5000);
+    const interval = setInterval(refresh, 60000);
     window.addEventListener("focus", refresh);
     document.addEventListener("visibilitychange", refresh);
     document.addEventListener("click", onLinkClick);

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Copy, Check, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -11,8 +11,12 @@ import type { Locale } from "@/lib/locale";
 export function LinkControls({ id, url, locale, detail = false }: { id: string; url: string; slug: string; locale: Locale; detail?: boolean }) {
   const fa = locale === "fa", router = useRouter();
   const [copied, setCopied] = useState(false), [open, setOpen] = useState(false), [pending, setPending] = useState(false);
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(copyTimer.current), []);
   async function copy() {
-    try { await navigator.clipboard.writeText(url); setCopied(true); toast.success(fa ? "لینک کپی شد." : "Link copied."); }
+    clearTimeout(copyTimer.current);
+    setCopied(false);
+    try { await navigator.clipboard.writeText(url); setCopied(true); copyTimer.current = setTimeout(() => setCopied(false), 2000); toast.success(fa ? "لینک کپی شد." : "Link copied."); }
     catch { toast.error(fa ? "کپی انجام نشد؛ دوباره تلاش کنید." : "Could not copy the link."); }
   }
   async function remove() {

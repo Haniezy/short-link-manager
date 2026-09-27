@@ -1,4 +1,5 @@
 "use client";
+import { saveLinkDraft } from "@/lib/link-draft";
 import { useState } from "react";
 import { Link2, ArrowLeft, ArrowRight, Copy, Check, Sparkles, LockKeyhole } from "lucide-react";
 import { toast } from "sonner";
@@ -33,6 +34,7 @@ export function Shortener() {
     if (!parsed.success) { setError(t.urlError); return; }
     setError("");
     if (!email) {
+      saveLinkDraft(parsed.data);
       openAuth("signup");
     } else await create(parsed.data);
   }
@@ -42,7 +44,7 @@ export function Shortener() {
   }
   return <div className="shortener-card">
     <div className="shortener-title"><span><Sparkles size={15} />{t.formTitle}</span><span className="little-label">LinkFlow</span></div>
-    <form action={submit} className="shortener-form">
+    <form noValidate action={submit} className="shortener-form">
       <div className="url-input-wrap"><Link2 size={18} aria-hidden="true" /><Input aria-label={t.urlLabel} aria-invalid={!!error} aria-describedby={error ? "url-error" : "url-help"} name="longUrl" dir="ltr" type="url" placeholder="https://your-very-long-link.com/something-great" value={url} onChange={(event) => { setUrl(event.target.value); setError(""); }} required disabled={pending} /></div>
       <GlassButton type="submit" className="shorten-button" disabled={pending}>{pending ? t.shortening : t.shorten}{locale === "fa" ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}</GlassButton>
     </form>
