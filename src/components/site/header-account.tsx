@@ -1,9 +1,8 @@
 "use client";
 import { UserAvatar } from "./user-avatar";
-import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, LayoutDashboard, UserRound } from "lucide-react";
+import { ChevronDown, LogOut, LayoutDashboard, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { GlassButton } from "@/components/ui/glass-button";
@@ -23,12 +22,12 @@ export function HeaderAccount({ locale, email, name, image }: { locale: Locale; 
     finally { setPending(false); }
   }
   if (!email) return <><Button variant="ghost" className="header-login" onClick={() => router.push("/login")}>{copy[locale].login}</Button><GlassButton className="header-signup" onClick={() => router.push("/signup")}>{copy[locale].signup}</GlassButton></>;
-  return <><Link href="/dashboard" className="account-dashboard">{fa ? "داشبورد" : "Dashboard"}</Link><DropdownMenu>
-    <DropdownMenuTrigger render={<Button variant="outline" className="account-profile" aria-label={fa ? "منوی حساب کاربری" : "Account menu"} />}><UserAvatar name={name || email} image={image} /><span className="account-name">{name || email.split("@")[0]}</span></DropdownMenuTrigger>
-    <DropdownMenuContent align="end" className="w-64"><DropdownMenuGroup><DropdownMenuLabel>{fa ? "حساب شما" : "Your account"}<span className="block truncate text-xs font-normal text-muted-foreground" dir="ltr">{email}</span></DropdownMenuLabel></DropdownMenuGroup><DropdownMenuSeparator />
+  return <DropdownMenu>
+    <DropdownMenuTrigger render={<Button variant="ghost" className="account-profile" aria-label={fa ? "منوی حساب کاربری" : "Account menu"} />}><UserAvatar name={name || email} image={image} /><span className="account-name">{name || email.split("@")[0]}</span><ChevronDown size={14} className="account-chevron" aria-hidden="true" /></DropdownMenuTrigger>
+    <DropdownMenuContent align="end" className="w-64" dir={fa ? "rtl" : "ltr"}><DropdownMenuGroup><DropdownMenuLabel>{fa ? "حساب شما" : "Your account"}<span className="block truncate text-xs font-normal text-muted-foreground" dir="ltr">{email}</span></DropdownMenuLabel></DropdownMenuGroup><DropdownMenuSeparator />
       <DropdownMenuItem onClick={() => router.push("/dashboard/profile")}><UserRound />{fa ? "پروفایل و تنظیمات" : "Profile & settings"}</DropdownMenuItem>
       <DropdownMenuItem onClick={() => router.push("/dashboard")}><LayoutDashboard />{fa ? "داشبورد لینک‌ها" : "Link dashboard"}</DropdownMenuItem>
       <DropdownMenuItem disabled={pending} onClick={logout}><LogOut />{pending ? (fa ? "در حال خروج…" : "Signing out…") : (fa ? "خروج از حساب" : "Sign out")}</DropdownMenuItem>
     </DropdownMenuContent>
-  </DropdownMenu></>;
+  </DropdownMenu>;
 }
