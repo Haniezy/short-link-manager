@@ -3,10 +3,15 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { getAvatarUrl } from "../db/avatars";
 import { getAuth } from "./server";
+import { isUnauthenticatedError } from "./errors";
 
 export const getCurrentUser = cache(async () => {
   const { data, error } = await getAuth().getSession({ query: { disableCookieCache: "true" } });
-  if (error) throw new Error("Authentication is temporarily unavailable.");
+  // A revoked or expired session means signed out, not broken; only real failures are outages.
+  if (error) {
+    if (isUnauthenticatedError(error)) return null;
+    throw new Error("Authentication is temporarily unavailable.");
+  }
   if (!data?.user) return null;
   // A photo lookup must not invalidate an otherwise verified session.
   const avatar = await getAvatarUrl(data.user.id).catch(() => null);

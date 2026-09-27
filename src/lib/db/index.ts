@@ -1,8 +1,7 @@
 import "server-only";
+import { createRequire } from "node:module";
 import { Pool } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-serverless";
-import { PGlite } from "@electric-sql/pglite";
-import { drizzle as drizzleLocal } from "drizzle-orm/pglite";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import * as schema from "./schema";
 
@@ -11,6 +10,11 @@ function createDatabase(): PgDatabase<PgQueryResultHKT, typeof schema> {
     if (process.env.NODE_ENV === "production") {
       throw new Error("PGlite is only supported for local development.");
     }
+    // Required on demand: PGlite is a ~26 MB dev-only package and must stay out of
+    // the production module graph, where it would be loaded on every cold start.
+    const require = createRequire(import.meta.url);
+    const { PGlite } = require("@electric-sql/pglite") as typeof import("@electric-sql/pglite");
+    const { drizzle: drizzleLocal } = require("drizzle-orm/pglite") as typeof import("drizzle-orm/pglite");
     return drizzleLocal(new PGlite(process.env.PGLITE_DATA_DIR || "./.pglite"), { schema });
   }
   const connectionString = process.env.DATABASE_URL;

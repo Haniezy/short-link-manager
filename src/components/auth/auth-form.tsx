@@ -19,7 +19,6 @@ const labels = {
 };
 
 const fieldMessages: Record<string, string> = {
-  "Please use a Gmail address ending in @gmail.com.": "لطفاً آدرس جیمیل با دامنهٔ @gmail.com وارد کنید.",
   "Enter a valid email address.": "یک آدرس ایمیل معتبر وارد کنید.",
   "Email is too long.": "ایمیل باید حداکثر ۲۵۴ کاراکتر باشد.",
   "Password must be at least 8 characters.": "رمز عبور باید حداقل ۸ کاراکتر باشد.",
@@ -30,8 +29,9 @@ const fieldMessages: Record<string, string> = {
   "Your passwords do not match.": "رمز عبور و تکرار آن یکسان نیستند.",
 };
 
-export function AuthForm({ mode, locale, notice }: { mode: "login" | "signup"; locale: Locale; notice?: "required" | "unavailable" }) {
+export function AuthForm({ mode, locale, notice, next }: { mode: "login" | "signup"; locale: Locale; notice?: "required" | "unavailable"; next?: string }) {
   const t = labels[locale], signup = mode === "signup", router = useRouter();
+  const returnTo = next && next !== "/dashboard" ? next : "/dashboard";
   const [pending, setPending] = useState(false);
   const [visible, setVisible] = useState(false);
   const [confirmVisible, setConfirmVisible] = useState(false);
@@ -80,7 +80,7 @@ export function AuthForm({ mode, locale, notice }: { mode: "login" | "signup"; l
       }
       if (result.data.requiresEmailVerification) { setMessage(t.verify); toast.info(t.verify); return; }
       toast.success(signup ? (fa ? "حساب شما با موفقیت ساخته شد." : "Your account was created successfully.") : (fa ? "با موفقیت وارد شدید." : "You signed in successfully."));
-      router.replace("/dashboard"); router.refresh();
+      router.replace(returnTo); router.refresh();
     } catch { fail(t.failed); }
     finally { setPending(false); }
   }
@@ -96,6 +96,6 @@ export function AuthForm({ mode, locale, notice }: { mode: "login" | "signup"; l
     {signup && <div className="auth-line-field"><Label htmlFor="confirm-password">{t.confirm}</Label><div className="auth-password-wrap"><Input {...fieldProps("confirmPassword")} id="confirm-password" name="confirmPassword" type={confirmVisible ? "text" : "password"} autoComplete="new-password" dir="ltr" placeholder="••••••••" required minLength={8} maxLength={128} disabled={pending} /><Button type="button" variant="ghost" size="icon" onClick={() => setConfirmVisible((value) => !value)} aria-controls="confirm-password" aria-label={(confirmVisible ? t.hide : t.show) + " — " + t.confirm}>{confirmVisible ? <EyeOff /> : <Eye />}</Button></div>{fieldError("confirmPassword")}</div>}
     <p className="auth-message" role="status" aria-live="polite">{message}</p>
     <GlassButton type="submit" className="auth-submit" disabled={pending}>{pending ? t.pending : signup ? t.signup : t.login}</GlassButton>
-    <p className="auth-page-switch">{signup ? t.existing : t.new} <Link href={signup ? "/login" : "/signup"}>{signup ? t.login : t.signup}</Link></p>
+    <p className="auth-page-switch">{signup ? t.existing : t.new} <Link href={signup ? `/login?next=${encodeURIComponent(returnTo)}` : `/signup?next=${encodeURIComponent(returnTo)}`}>{signup ? t.login : t.signup}</Link></p>
   </form>;
 }

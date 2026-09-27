@@ -19,7 +19,7 @@ export const createLinkSchema = z.object({
 export const deleteLinkSchema = z.object({ id: linkIdSchema });
 const emailSchema = z.string().trim().toLowerCase().max(254, "Email is too long.").pipe(z.email("Enter a valid email address."));
 export const registerSchema = z.object({
-  email: emailSchema.refine(value => value.endsWith("@gmail.com"), "Please use a Gmail address ending in @gmail.com."),
+  email: emailSchema,
   password: z.string().min(8, "Password must be at least 8 characters.")
     .max(128, "Password must be at most 128 characters."),
 });
@@ -42,3 +42,30 @@ export function validationError(error: z.ZodError) {
 }
 
 export const dashboardPageSchema = z.coerce.number().int().min(1).max(1000000);
+
+const RETURN_PATH_ORIGIN = "https://return-path.invalid";
+
+function hasUnsafeCharacter(value: string): boolean {
+  for (const character of value) {
+    const code = character.codePointAt(0) ?? 0;
+    if (code <= 0x20 || code === 0x7f || code === 0xa0 || character === "\\") return true;
+  }
+  return false;
+}
+
+/**
+ * Accepts only same-origin absolute paths so a crafted return target cannot become an open redirect.
+ * Absolute URLs, protocol-relative "//host", and backslash or control-character tricks are rejected.
+ */
+export function safeReturnPath(value: unknown, fallback = "/dashboard"): string {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (typeof raw !== "string" || raw.length === 0 || raw.length > 2048) return fallback;
+  if (!raw.startsWith("/") || hasUnsafeCharacter(raw)) return fallback;
+  try {
+    const url = new URL(raw, RETURN_PATH_ORIGIN);
+    if (url.origin !== RETURN_PATH_ORIGIN) return fallback;
+    return url.pathname + url.search + url.hash;
+  } catch {
+    return fallback;
+  }
+}

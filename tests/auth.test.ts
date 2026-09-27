@@ -47,11 +47,20 @@ it("rejects missing or mismatched password confirmation before contacting Neon",
   expect(auth.signUp.email).not.toHaveBeenCalled();
 });
 
-it("rejects non-Gmail signup addresses before contacting Neon", async () => {
-  for (const email of ["user@mi.com", "user@yahoo.com", "user@gmail", "user@gmail.com.evil.com", "user@sub.gmail.com"]) {
+it("rejects malformed signup addresses before contacting Neon", async () => {
+  for (const email of ["invalid", "user@gmail", "user@", "user @gmail.com", "@gmail.com"]) {
     const result = await registerAction({ email, password: "long-password", confirmPassword: "long-password" });
     expect(result.fieldErrors?.email).toBeDefined();
     expect(result.data).toBeNull();
   }
   expect(auth.signUp.email).not.toHaveBeenCalled();
+});
+
+it("accepts signup on any valid email domain", async () => {
+  auth.signUp.email.mockResolvedValue({ data: { user: { email: "user@example.com" }, token: "token" }, error: null });
+  for (const email of ["user@outlook.com", "person@sub.example.co.uk", "user@yahoo.com"]) {
+    const result = await registerAction({ email, password: "long-password", confirmPassword: "long-password" });
+    expect(result.error).toBeFalsy();
+    expect(result.data?.requiresEmailVerification).toBe(false);
+  }
 });

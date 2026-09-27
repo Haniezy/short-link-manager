@@ -88,6 +88,47 @@ At deployment, set the variables in Vercel's Environment Variables, add the depl
 Neon Auth's trusted domains, set NEXT_PUBLIC_APP_URL to that origin, and redeploy.
 Use a separate Neon branch for ongoing development once real users exist.
 
+## Production deployment (Neon + Vercel)
+
+The app targets Vercel serverless functions with Neon Postgres and Neon Auth, one Neon
+**production branch** for the live site. Nothing else is required: there is no `vercel.json`,
+no custom server and no separate build step.
+
+1. **Prepare the Neon production branch.** Enable Neon Auth on the `production` branch, then
+   apply the schema to it. Migrations are never run automatically, so run them once by hand
+   with the production connection string:
+
+   ```sh
+   DATABASE_DRIVER=neon DATABASE_URL="<production pooled url>" pnpm db:migrate
+   ```
+
+   `DATABASE_URL` and `NEON_AUTH_BASE_URL` must come from the **same** branch. Migration `0002`
+   refuses to run when legacy accounts or links still contain rows, so migrate an empty branch
+   or export the data first.
+
+2. **Set the Vercel environment variables** for the Production environment:
+
+   | Variable | Scope | Value |
+   | --- | --- | --- |
+   | `DATABASE_DRIVER` | Build + Runtime | `neon` |
+   | `DATABASE_URL` | Build + Runtime | Production pooled Postgres URL |
+   | `NEON_AUTH_BASE_URL` | Build + Runtime | Auth URL of the production branch |
+   | `NEON_AUTH_COOKIE_SECRET` | Build + Runtime | Fresh 32+ character secret |
+   | `NEXT_PUBLIC_APP_URL` | **Build** (required) and Runtime | The final HTTPS origin |
+
+   `NEXT_PUBLIC_APP_URL` is a `NEXT_PUBLIC_*` value, so it is inlined into the client bundle at
+   build time. If it is missing from the build environment, every generated short link points at
+   the fallback origin. Set it before the first deploy, and redeploy after changing it.
+
+3. **Add the production origin to Neon Auth's trusted domains** (Neon Console → Auth → Configure
+   Auth → Trusted domains). Also add any custom domain you plan to use.
+
+4. **Deploy.** Every route is server-rendered on demand, so no rewrites or function regions need
+   configuring. After the first successful deploy, confirm the short-link origin and the auth
+   trusted-domain list match the final domain.
+
+Rotating `NEON_AUTH_COOKIE_SECRET` signs every user out, so treat it as a deliberate operation.
+
 ## Database migrations
 
 ```sh
@@ -128,7 +169,8 @@ are validated with Zod. UI code must still handle the returned errors and pendin
 
 ## Decisions I made
 
-- New registrations accept only valid email addresses on the exact `gmail.com` domain, per product request. Zod enforces this in both the form and Server Action; it does not verify mailbox ownership. Existing non-Gmail accounts can still sign in.
+- New registrations accept any syntactically valid email address. Zod enforces this in both the
+  form and Server Action; it does not verify mailbox ownership.
 
 - **Slugs are unique per user and case-sensitive.** Public URLs use
   `/r/[owner]/[slug]` so different users can choose the same slug without ambiguous

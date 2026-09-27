@@ -5,7 +5,7 @@ import { DisplayControls } from "@/components/landing/controls";
 import { AuthForm } from "./auth-form";
 import "./auth.css";
 
-export async function AuthScreen({ mode, notice }: { mode: "login" | "signup"; notice?: "required" | "unavailable" }) {
+export async function AuthScreen({ mode, notice, next }: { mode: "login" | "signup"; notice?: "required" | "unavailable"; next?: string }) {
   const locale = await readLocale();
   const fa = locale === "fa";
   return <main key={mode} className={`auth-page auth-page-${mode}`}>
@@ -37,7 +37,7 @@ export async function AuthScreen({ mode, notice }: { mode: "login" | "signup"; n
     <div className="auth-page-content">
       <nav className="auth-page-nav" aria-label={fa ? "تنظیمات صفحه" : "Page controls"}><Link href="/" className="auth-back" aria-label={fa ? "بازگشت به صفحهٔ اصلی" : "Back to home"}>{fa ? <ArrowRight size={17} /> : <ArrowLeft size={17} />}</Link><DisplayControls locale={locale} /></nav>
       <header className="auth-page-heading"><Link href="/" className="auth-wordmark" dir="ltr"><span className="auth-brand-icon"><Link2 size={23} /></span>LinkFlow</Link><h1>{mode === "login" ? fa ? "خوش برگشتید!" : "Welcome back!" : fa ? "حسابتان را بسازید." : "Create an Account."}</h1><p className="auth-intro">{mode === "login" ? fa ? "برای مدیریت لینک‌هایتان وارد حساب شوید." : "Enter your details to manage your links." : fa ? "اولین قدم برای لینک‌های کوتاه‌تر و به‌یادماندنی." : "Your first step to shorter, memorable links."}</p></header>
-      <AuthForm mode={mode} locale={locale} notice={notice} />
+      <AuthForm mode={mode} locale={locale} notice={notice} next={next} />
     </div>
   </main>;
 }

@@ -1,7 +1,8 @@
 import { config } from "dotenv";
 import { defineConfig } from "drizzle-kit";
 
-config({ path: ".env.local", quiet: true });
+// Real environment variables win, so CI and production can point drizzle-kit at another branch.
+config({ path: [".env.local", ".env"], quiet: true });
 
 export default defineConfig({
   dialect: "postgresql",
