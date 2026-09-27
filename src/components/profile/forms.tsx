@@ -22,6 +22,7 @@ const translations: Record<string, string> = {
 };
 export function ProfileForm({ name, email, image, locale }: { name: string; email: string; image: string | null; locale: Locale }) {
   const fa = locale === "fa", router = useRouter();
+  const [displayName, setDisplayName] = useState(name);
   const [pending, setPending] = useState(false), [error, setError] = useState("");
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); if (pending) return;
@@ -32,12 +33,13 @@ export function ProfileForm({ name, email, image, locale }: { name: string; emai
     try {
       const result = await updateProfileAction(parsed.data);
       if (result.error) { toast.error(fa ? "ذخیره نشد؛ دوباره تلاش کنید." : result.error); return; }
+      setDisplayName(parsed.data.name);
       toast.success(fa ? "مشخصات ذخیره شد." : "Profile saved."); router.refresh();
     } catch { toast.error(fa ? "ذخیره نشد؛ دوباره تلاش کنید." : "Could not save your profile."); }
     finally { setPending(false); }
   }
   return <section className="dashboard-panel profile-panel"><h2><UserRound size={18} />{fa ? "مشخصات فردی" : "Personal details"}</h2><p>{fa ? "نامی که در حساب شما نمایش داده می‌شود." : "Make this workspace feel like yours."}</p><form noValidate onSubmit={submit} aria-busy={pending}>
-    <div className="profile-fields"><div><Label htmlFor="profile-name">{fa ? "نام نمایشی" : "Display name"}</Label><Input id="profile-name" name="name" defaultValue={name} maxLength={80} autoComplete="name" disabled={pending} aria-invalid={!!error} aria-describedby={error ? "name-error" : undefined} onChange={() => setError("")} />{error && <p id="name-error" className="dashboard-field-error" role="alert">{fa ? translations[error] ?? "نام معتبر وارد کنید." : error}</p>}</div><div><Label htmlFor="profile-email">{fa ? "ایمیل حساب" : "Account email"}</Label><Input id="profile-email" value={email} readOnly dir="ltr" /><small>{fa ? "ایمیل ورود شما؛ در این صفحه قابل تغییر نیست." : "Your sign-in email; read-only on this page."}</small></div></div>
+    <div className="profile-fields"><div><Label htmlFor="profile-name">{fa ? "نام نمایشی" : "Display name"}</Label><Input id="profile-name" name="name" value={displayName} maxLength={80} autoComplete="name" disabled={pending} aria-invalid={!!error} aria-describedby={error ? "name-error" : undefined} onChange={event => { setDisplayName(event.target.value); setError(""); }} />{error && <p id="name-error" className="dashboard-field-error" role="alert">{fa ? translations[error] ?? "نام معتبر وارد کنید." : error}</p>}</div><div><Label htmlFor="profile-email">{fa ? "ایمیل حساب" : "Account email"}</Label><Input id="profile-email" value={email} readOnly dir="ltr" /><small>{fa ? "ایمیل ورود شما؛ در این صفحه قابل تغییر نیست." : "Your sign-in email; read-only on this page."}</small></div></div>
     <GlassButton type="submit" disabled={pending}><Save size={16} />{pending ? (fa ? "در حال ذخیره…" : "Saving…") : (fa ? "ذخیرهٔ تغییرات" : "Save changes")}</GlassButton>
   </form><AvatarUpload image={image} name={name} locale={locale} /></section>;
 }
