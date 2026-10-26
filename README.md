@@ -1,7 +1,40 @@
-# Short Link Manager
+# Short Link Manager (LinkFlow)
 
 A Next.js 16 / TypeScript application backed by Neon Postgres, Drizzle and Neon Auth.
 Package manager: pnpm 10.10.0. Tailwind CSS v4 and shadcn/ui are installed.
+
+**Live:** [short-link-manager-rose.vercel.app](https://short-link-manager-rose.vercel.app)
+
+<p align="center">
+  <img src="docs/screenshots/dashboard.webp" alt="Dashboard with links and click totals" width="800">
+</p>
+
+## Features
+
+- Short links with an optional custom slug, unique per user (`/r/{owner}/{slug}`), validated with Zod.
+- Dashboard with server-side pagination, total links and clicks, copy to clipboard and delete confirmation.
+- Every redirect records a click; each link has a detail page with a seven-day chart (Recharts).
+- Email/password accounts with Neon Auth. The profile changes the display name, changes the password
+  (signing out other sessions) and uploads a cropped photo that the server normalizes to 256×256 WebP.
+- Persian (RTL) and English, light and dark themes, responsive from phone to desktop.
+- Tests with Vitest on in-memory PostgreSQL (PGlite).
+
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/landing.webp" alt="Landing page" width="800">
+</p>
+<p align="center">
+  <img src="docs/screenshots/detail-dark.webp" alt="Link details with the seven-day click chart, dark theme" width="800">
+</p>
+<p align="center">
+  <img src="docs/screenshots/login.webp" alt="Sign-in page" width="800">
+</p>
+<p align="center">
+  <img src="docs/screenshots/phone-dashboard-dark.webp" alt="Dashboard on a phone, dark theme" width="260">
+</p>
+
+The screenshots use made-up links.
 
 ## Current status
 
@@ -29,8 +62,8 @@ Next.js signup/signin/signout Server Actions, wrong-password rejection and authe
 HTTP access to `/dashboard`; the account was deleted and cleanup verified. Full browser
 acceptance of link creation and analytics still remains. PGlite alone does not provide authentication.
 
-**Deployed URL:** not deployed yet. Vercel deployment and browser-based acceptance testing are pending.
-Do not treat this branch as a finished submission.
+**Deployed URL:** https://short-link-manager-rose.vercel.app (Vercel, with Postgres and Auth on the
+Neon `production` branch).
 
 ## Local setup
 
@@ -262,7 +295,7 @@ A real Neon transaction verified that two owners can use the same slug and dupli
 slugs for one owner are rejected; all test rows were rolled back. Local PGlite files
 and a backup were retained but are not used or migrated: the existing local store
 failed startup with a checkpoint error. Its old links are not present in Neon unless
-separately recovered and migrated. Vercel deployment is still pending.
+separately recovered and migrated. The app has since been deployed to Vercel (see the top of this file).
 
 ### Profile verification
 
