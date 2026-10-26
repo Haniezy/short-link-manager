@@ -5,10 +5,6 @@ Package manager: pnpm 10.10.0. Tailwind CSS v4 and shadcn/ui are installed.
 
 **Live:** [short-link-manager-rose.vercel.app](https://short-link-manager-rose.vercel.app)
 
-<p align="center">
-  <img src="docs/screenshots/dashboard.webp" alt="Dashboard with links and click totals" width="800">
-</p>
-
 ## Features
 
 - Short links with an optional custom slug, unique per user (`/r/{owner}/{slug}`), validated with Zod.
@@ -18,23 +14,6 @@ Package manager: pnpm 10.10.0. Tailwind CSS v4 and shadcn/ui are installed.
   (signing out other sessions) and uploads a cropped photo that the server normalizes to 256×256 WebP.
 - Persian (RTL) and English, light and dark themes, responsive from phone to desktop.
 - Tests with Vitest on in-memory PostgreSQL (PGlite).
-
-## Screenshots
-
-<p align="center">
-  <img src="docs/screenshots/landing.webp" alt="Landing page" width="800">
-</p>
-<p align="center">
-  <img src="docs/screenshots/detail-dark.webp" alt="Link details with the seven-day click chart, dark theme" width="800">
-</p>
-<p align="center">
-  <img src="docs/screenshots/login.webp" alt="Sign-in page" width="800">
-</p>
-<p align="center">
-  <img src="docs/screenshots/phone-dashboard-dark.webp" alt="Dashboard on a phone, dark theme" width="260">
-</p>
-
-The screenshots use made-up links.
 
 ## Current status
 
