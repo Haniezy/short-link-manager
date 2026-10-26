@@ -38,8 +38,7 @@ Local UI checks used temporary fixture data to review desktop/mobile layouts, bo
 inline validation, delete confirmation and empty states. The temporary preview route was removed.
 Backend tests include pagination and owner-scoped totals. Local Neon Auth is configured in `.env.local`. A temporary account verified the actual
 Next.js signup/signin/signout Server Actions, wrong-password rejection and authenticated
-HTTP access to `/dashboard`; the account was deleted and cleanup verified. Full browser
-acceptance of link creation and analytics still remains. PGlite alone does not provide authentication.
+HTTP access to `/dashboard`; the account was deleted and cleanup verified. PGlite alone does not provide authentication.
 
 **Deployed URL:** https://short-link-manager-rose.vercel.app (Vercel, with Postgres and Auth on the
 Neon `production` branch).
@@ -231,9 +230,7 @@ wrong-password rejection, sign-in, sign-out and rejection of revoked cookies. A 
 Next.js server redirected five concurrent requests and produced exactly five events; HEAD did not
 increment the count. The disposable account and link were removed, and cleanup was verified.
 
-These live checks exercise the provider SDK and redirect backend, not a browser UI. Browser cookie
-behavior and the full sign-up → dashboard → create → redirect → statistics flow must be checked
-again after the UI is connected and after deployment.
+These live checks exercise the provider SDK and redirect backend, not a browser UI.
 
 ## How I used AI tools
 
